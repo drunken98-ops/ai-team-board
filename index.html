@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 합동 보드 — 우리 AI 팀 칸반</title>
+  <meta name="description" content="몽이와 대리들이 함께 쓰는 AI 팀 합동 칸반 보드. 드래그·체크리스트·자동 백업·GitHub Issues 동기화 지원.">
+  <meta name="theme-color" content="#07071a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Crect x='14' y='16' width='10' height='32' rx='4' fill='%23fff'/%3E%3Crect x='27' y='16' width='10' height='22' rx='4' fill='%23fff' opacity='.85'/%3E%3Crect x='40' y='16' width='10' height='14' rx='4' fill='%23fff' opacity='.7'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --indigo: #6366f1; --violet: #a855f7; --cyan: #22d3ee; --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+      --grad: linear-gradient(100deg, #818cf8 0%, #a855f7 45%, #22d3ee 100%);
+      --grad-btn: linear-gradient(100deg, #6366f1, #8b5cf6 55%, #a855f7);
+      --radius: 18px; --ease: cubic-bezier(.22, 1, .36, 1);
+      --display: 'Plus Jakarta Sans', system-ui, sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --c-backlog: #94a3b8; --c-ready: #22d3ee; --c-progress: #818cf8; --c-review: #f59e0b; --c-done: #22c55e;
+    }
+    [data-theme="dark"] {
+      --bg: #07071a; --bg-2: #0e0e26; --surface: rgba(255, 255, 255, .045); --surface-2: rgba(255, 255, 255, .08); --card: #12122e;
+      --line: rgba(255, 255, 255, .08); --line-2: rgba(255, 255, 255, .16);
+      --text: #eef0ff; --muted: #a0a3c4; --shadow: 0 30px 60px -30px rgba(0, 0, 0, .9); --aurora: .45;
+      --input: rgba(0, 0, 0, .3);
+    }
+    [data-theme="light"] {
+      --bg: #f6f7fc; --bg-2: #eef0fa; --surface: rgba(255, 255, 255, .8); --surface-2: #ffffff; --card: #ffffff;
+      --line: rgba(20, 20, 60, .09); --line-2: rgba(20, 20, 60, .18);
+      --text: #14142b; --muted: #5d6185; --shadow: 0 24px 50px -30px rgba(40, 40, 120, .35); --aurora: .22;
+      --input: #ffffff;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--body); font-size: 15px; overflow-x: hidden; transition: background-color .4s var(--ease), color .4s var(--ease); }
+    h1, h2, h3, h4, h5 { font-family: var(--display); letter-spacing: -.025em; }
+    ::selection { background: rgba(99, 102, 241, .35); }
+    :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    a { color: var(--cyan); }
+
+    .bg-fx { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(100px); opacity: var(--aurora); }
+    .b1 { width: 46vw; height: 46vw; left: -12vw; top: -22vw; background: radial-gradient(circle, #6366f1, transparent 65%); animation: d1 26s var(--ease) infinite alternate; }
+    .b2 { width: 40vw; height: 40vw; right: -14vw; top: 10vh; background: radial-gradient(circle, #a855f7, transparent 65%); animation: d2 30s var(--ease) infinite alternate; }
+    .b3 { width: 36vw; height: 36vw; left: 35vw; bottom: -24vw; background: radial-gradient(circle, #22d3ee, transparent 65%); animation: d3 34s var(--ease) infinite alternate; }
+    .dots-fx { position: absolute; inset: 0; background-image: radial-gradient(var(--line-2) 1px, transparent 1px); background-size: 26px 26px; mask-image: linear-gradient(#000, transparent 70%); opacity: .5; }
+    @keyframes d1 { to { transform: translate(10vw, 10vh) scale(1.15); } }
+    @keyframes d2 { to { transform: translate(-12vw, 12vh) scale(.9); } }
+    @keyframes d3 { to { transform: translate(-10vw, -14vh) scale(1.15); } }
+
+    /* ---------- Topbar ---------- */
+    .topbar { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); background: color-mix(in srgb, var(--bg) 74%, transparent); border-bottom: 1px solid var(--line); }
+    .topbar-inner { display: flex; align-items: center; gap: .8rem; min-height: 68px; padding: .6rem 0; flex-wrap: wrap; }
+    .brand { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--display); font-weight: 800; font-size: 1.25rem; color: var(--text); text-decoration: none; }
+    .brand-mark { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--grad-btn); color: #fff; box-shadow: 0 10px 28px -10px rgba(99, 102, 241, .9); }
+    .brand-x { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .search { position: relative; flex: 1; min-width: 180px; max-width: 420px; }
+    .search i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .search input { width: 100%; height: 42px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text); padding: 0 2.6rem 0 2.4rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+    .search input:focus { border-color: var(--indigo); box-shadow: 0 0 0 4px rgba(99, 102, 241, .18); }
+    .search input::placeholder { color: var(--muted); }
+    .search kbd { position: absolute; right: .6rem; top: 50%; transform: translateY(-50%); background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); font-family: var(--mono); font-size: .72rem; padding: .1rem .4rem; border-radius: 6px; }
+    .icon-btn { position: relative; width: 42px; height: 42px; flex: none; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); display: grid; place-items: center; transition: border-color .2s, transform .3s var(--ease), background .2s; }
+    .icon-btn:hover { border-color: var(--line-2); transform: translateY(-1px); }
+    .icon-btn .badge-dot { position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--red); color: #fff; font-size: .62rem; font-weight: 700; display: grid; place-items: center; }
+    .btn-grad { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: .45rem; border: 0; height: 42px; border-radius: 12px; padding: 0 1.1rem; color: #fff; font-weight: 700; font-family: var(--display); background: var(--grad-btn); box-shadow: 0 14px 30px -14px rgba(99, 102, 241, 1); transition: transform .3s var(--ease); white-space: nowrap; }
+    .btn-grad::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .4) 50%, transparent 70%); transform: translateX(-120%); transition: transform .8s var(--ease); }
+    .btn-grad:hover { transform: translateY(-2px); color: #fff; }
+    .btn-grad:hover::after { transform: translateX(120%); }
+    .btn-soft { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 12px; padding: .6rem 1rem; font-weight: 600; font-size: .9rem; transition: border-color .2s, transform .3s var(--ease); }
+    .btn-soft:hover { border-color: var(--line-2); transform: translateY(-1px); color: var(--text); }
+    .btn-soft.danger { color: #f87171; border-color: rgba(239, 68, 68, .35); }
+    .btn-soft.sm { padding: .35rem .7rem; font-size: .8rem; border-radius: 9px; }
+    .tools { display: flex; gap: .5rem; }
+    .save-state { display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+    .save-state i { color: var(--green); }
+    .save-state.saving i { color: var(--amber); animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Stats + filtros ---------- */
+    .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; margin: 1.4rem 0 1rem; }
+    .stat { position: relative; overflow: hidden; padding: 1rem 1.1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(12px); }
+    .stat small { color: var(--muted); font-size: .74rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .stat b { display: block; font-family: var(--display); font-size: 1.8rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; margin-top: .25rem; font-variant-numeric: tabular-nums; }
+    .stat .ic { position: absolute; right: 1rem; top: 1rem; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); }
+    .stat .bar { height: 5px; border-radius: 999px; background: var(--surface-2); margin-top: .55rem; overflow: hidden; }
+    .stat .bar span { display: block; height: 100%; background: var(--grad); border-radius: inherit; transition: width .8s var(--ease); }
+    .filters { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    .chip { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .38rem .8rem; font-size: .82rem; font-weight: 600; transition: all .2s; }
+    .chip:hover { color: var(--text); border-color: var(--line-2); }
+    .chip.active { color: #fff; background: var(--grad-btn); border-color: transparent; }
+    .chip .pd { width: 8px; height: 8px; border-radius: 50%; }
+    .filters select { appearance: none; border: 1px solid var(--line); background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%23818cf8' d='M8 11L3 6h10z'/%3E%3C/svg%3E") no-repeat right .6rem center; color: var(--text); border-radius: 999px; padding: .38rem 1.8rem .38rem .8rem; font-size: .82rem; font-weight: 600; }
+    .filters select option { background: var(--bg-2); }
+
+    /* ---------- Board ---------- */
+    .board { display: grid; grid-template-columns: repeat(5, minmax(232px, 1fr)); gap: .9rem; overflow-x: auto; padding-bottom: 2rem; scroll-snap-type: x proximity; }
+    .col { scroll-snap-align: start; display: flex; flex-direction: column; min-height: 420px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(12px); transition: border-color .2s, background .2s; }
+    .col.over { border-color: var(--col); background: color-mix(in srgb, var(--col) 8%, var(--surface)); }
+    .col-head { display: flex; align-items: center; gap: .55rem; padding: .95rem 1rem .8rem; border-bottom: 1px solid var(--line); }
+    .col-head .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--col); box-shadow: 0 0 12px var(--col); }
+    .col-head h2 { font-size: .92rem; font-weight: 700; margin: 0; flex: 1; }
+    .col-head .n { font-family: var(--mono); font-size: .75rem; color: var(--muted); background: var(--surface-2); padding: .1rem .5rem; border-radius: 999px; }
+    .col-head .add { width: 26px; height: 26px; border-radius: 8px; border: 0; background: transparent; color: var(--muted); }
+    .col-head .add:hover { background: var(--surface-2); color: var(--text); }
+    .col-body { flex: 1; padding: .75rem; display: flex; flex-direction: column; gap: .65rem; }
+    .col-empty { flex: 1; display: grid; place-items: center; text-align: center; color: var(--muted); font-size: .85rem; border: 1.5px dashed var(--line-2); border-radius: 14px; padding: 1.5rem .5rem; opacity: .75; }
+
+    .task { position: relative; padding: .85rem .9rem .8rem 1rem; border-radius: 14px; background: var(--card); border: 1px solid var(--line); cursor: grab; transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .2s; animation: pop .45s var(--ease) both; }
+    .task::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--pc); }
+    .task:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--line-2); }
+    .task.dragging { opacity: .45; transform: rotate(2deg) scale(.98); }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    .task-top { display: flex; align-items: center; gap: .35rem; margin-bottom: .45rem; }
+    .tag { display: inline-flex; align-items: center; gap: .25rem; font-size: .68rem; font-weight: 700; padding: .12rem .45rem; border-radius: 6px; background: var(--surface-2); color: var(--muted); letter-spacing: .02em; }
+    .tag.prio { color: var(--pc); background: color-mix(in srgb, var(--pc) 14%, transparent); }
+    .task-title { font-weight: 600; font-size: .93rem; line-height: 1.35; margin: 0 0 .5rem; word-break: break-word; }
+    .task.done .task-title { text-decoration: line-through; opacity: .6; }
+    .labels { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .55rem; }
+    .label { font-size: .68rem; font-weight: 600; padding: .1rem .45rem; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+    .task-meta { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; font-size: .76rem; color: var(--muted); }
+    .task-meta .due.over { color: #f87171; font-weight: 700; }
+    .task-meta .due.soon { color: var(--amber); font-weight: 700; }
+    .avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: .62rem; font-weight: 800; color: #fff; margin-left: auto; flex: none; }
+    .cl-bar { height: 4px; border-radius: 999px; background: var(--surface-2); margin-top: .55rem; overflow: hidden; }
+    .cl-bar span { display: block; height: 100%; background: var(--grad); }
+
+    /* ---------- Bienvenida ---------- */
+    .welcome { width: 100%; max-width: 720px; margin: 2.5rem auto 3rem; text-align: center; padding: 2.4rem 1.6rem; border-radius: 28px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(14px); }
+    .welcome .big { width: 72px; height: 72px; margin: 0 auto 1.2rem; border-radius: 22px; display: grid; place-items: center; font-size: 2rem; color: #fff; background: var(--grad-btn); box-shadow: 0 20px 40px -16px rgba(99, 102, 241, .9); animation: bob 3.4s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-7px); } }
+    .welcome h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; }
+    .welcome p { color: var(--muted); max-width: 32rem; margin: .6rem auto 1.6rem; }
+    .ticks { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.2rem; margin-top: 1.4rem; color: var(--muted); font-size: .85rem; }
+    .ticks i { color: var(--green); margin-right: .3rem; }
+
+    /* ---------- Modales / offcanvas ---------- */
+    .modal-content, .offcanvas { background: var(--bg-2); color: var(--text); border: 1px solid var(--line-2); }
+    .modal-content { border-radius: 22px; box-shadow: 0 50px 100px -30px rgba(0, 0, 0, .8); }
+    .modal-header, .modal-footer, .offcanvas-header { border-color: var(--line); }
+    .modal-title, .offcanvas-title { font-family: var(--display); font-weight: 800; }
+    .btn-close { filter: var(--close-f, invert(1) grayscale(1) brightness(2)); }
+    [data-theme="light"] { --close-f: none; }
+    .modal-backdrop.show { opacity: .65; }
+    .form-label { font-size: .78rem; font-weight: 600; color: var(--muted); letter-spacing: .03em; margin-bottom: .3rem; }
+    .form-control, .form-select { background-color: var(--input); border: 1px solid var(--line); color: var(--text); border-radius: 11px; padding: .6rem .8rem; }
+    .form-control:focus, .form-select:focus { background-color: var(--input); color: var(--text); border-color: var(--indigo); box-shadow: 0 0 0 4px rgba(99, 102, 241, .18); }
+    .form-control::placeholder { color: var(--muted); opacity: .7; }
+    .form-select option { background: var(--bg-2); color: var(--text); }
+    [data-theme="dark"] input[type="date"] { color-scheme: dark; }
+    .title-input { font-family: var(--display); font-size: 1.25rem; font-weight: 700; border: 0 !important; background: transparent !important; padding: .2rem 0 !important; box-shadow: none !important; }
+    .nav-pills-x { display: inline-flex; gap: .25rem; padding: .25rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
+    .nav-pills-x button { border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: .85rem; padding: .4rem .85rem; border-radius: 9px; }
+    .nav-pills-x button.active { background: var(--grad-btn); color: #fff; }
+    .cl-item { display: flex; align-items: center; gap: .6rem; padding: .45rem .6rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); margin-bottom: .4rem; }
+    .cl-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--indigo); flex: none; }
+    .cl-item span { flex: 1; word-break: break-word; }
+    .cl-item.done span { text-decoration: line-through; opacity: .55; }
+    .cl-item button { border: 0; background: transparent; color: var(--muted); }
+    .timeline { list-style: none; padding: 0; margin: 0; position: relative; }
+    .timeline::before { content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px; background: var(--line-2); }
+    .timeline li { position: relative; padding: 0 0 1rem 2.1rem; font-size: .88rem; }
+    .timeline li::before { content: ""; position: absolute; left: 5px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-2); border: 3px solid var(--tc, var(--indigo)); }
+    .timeline time { display: block; color: var(--muted); font-size: .74rem; }
+    .panel-x { padding: 1rem 1.1rem; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+    .panel-x h3 { font-size: 1rem; font-weight: 700; margin: 0 0 .3rem; display: flex; align-items: center; gap: .5rem; }
+    .panel-x p { color: var(--muted); font-size: .86rem; margin: 0 0 .8rem; }
+    .snap { display: flex; align-items: center; gap: .7rem; padding: .55rem .2rem; border-bottom: 1px solid var(--line); font-size: .86rem; }
+    .snap:last-child { border-bottom: 0; }
+    .snap .when { flex: 1; }
+    .snap small { color: var(--muted); }
+    .status-ok { color: var(--green); } .status-warn { color: var(--amber); }
+    .confirm-bar { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; width: 100%; padding: .65rem .8rem; border-radius: 12px; background: rgba(239, 68, 68, .12); border: 1px solid rgba(239, 68, 68, .45); font-size: .88rem; animation: pop .3s var(--ease) both; }
+    .confirm-bar > span > i { color: #f87171; }
+    .btn-danger-x { display: inline-flex; align-items: center; gap: .4rem; border: 0; border-radius: 9px; padding: .4rem .85rem; background: #ef4444; color: #fff; font-weight: 700; font-size: .84rem; box-shadow: 0 10px 24px -10px rgba(239, 68, 68, .9); }
+    .btn-danger-x:hover { background: #dc2626; }
+    .btn-soft.armed, .btn-soft.armed:hover { background: #ef4444; border-color: #ef4444; color: #fff; animation: pulse-r 1s ease-in-out infinite; }
+    @keyframes pulse-r { 50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, .25); } }
+    .warn-box { display: flex; gap: .6rem; padding: .75rem .9rem; border-radius: 12px; background: rgba(245, 158, 11, .1); border: 1px solid rgba(245, 158, 11, .35); font-size: .84rem; }
+    .warn-box i { color: var(--amber); }
+
+    .toast-x { position: fixed; left: 50%; bottom: 1.5rem; z-index: 2000; display: flex; align-items: center; gap: .9rem; transform: translate(-50%, calc(100% + 2rem)); opacity: 0; visibility: hidden; padding: .7rem .8rem .7rem 1.1rem; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line-2); color: var(--text); box-shadow: var(--shadow); font-size: .9rem; transition: transform .5s var(--ease), opacity .3s, visibility .5s; }
+    .toast-x.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; }
+    .toast-x button { border: 0; background: var(--grad-btn); color: #fff; font-weight: 700; border-radius: 9px; padding: .35rem .8rem; font-size: .82rem; }
+    .backup-nag { display: none; align-items: center; gap: .8rem; padding: .7rem 1rem; border-radius: 14px; margin-top: 1rem; background: linear-gradient(100deg, rgba(99, 102, 241, .18), rgba(168, 85, 247, .12)); border: 1px solid rgba(129, 140, 248, .35); font-size: .88rem; }
+    .backup-nag.on { display: flex; }
+    body { display: flex; flex-direction: column; }
+    body > main { flex: 1; display: flex; flex-direction: column; width: 100%; }
+    footer { color: var(--muted); font-size: .82rem; padding: 1.2rem 0 2rem; margin-top: auto; }
+
+    @media (max-width: 1199.98px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 767.98px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .search { order: 10; max-width: none; flex-basis: 100%; }
+      .brand { margin-right: auto; }
+      .tools { order: 11; flex-basis: 100%; justify-content: space-between; }
+      .tools .icon-btn { flex: 1; }
+      .backup-nag > i { display: none; }
+      .backup-nag { flex-wrap: wrap; }
+      .hide-sm { display: none !important; }
+      .board { grid-template-columns: repeat(5, 84vw); }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="dots-fx"></div></div>
+
+  <header class="topbar">
+    <div class="container-xxl topbar-inner">
+      <a class="brand" href="#" aria-label="AI 합동 보드"><span class="brand-mark"><i class="bi bi-kanban-fill"></i></span><span>AI합동<span class="brand-x">보드</span></span></a>
+      <div class="search"><i class="bi bi-search"></i><input id="search" type="search" placeholder="업무·담당·라벨 검색" aria-label="업무 검색"><kbd>/</kbd></div>
+      <span class="save-state ms-auto hide-sm" id="saveState" title="Saved in this browser"><i class="bi bi-cloud-check-fill"></i><span>Saved</span></span>
+      <div class="tools">
+      <button class="icon-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#activityPanel" title="Activity" aria-label="Activity"><i class="bi bi-clock-history"></i></button>
+      <button class="icon-btn" type="button" id="trashBtn" title="Trash" aria-label="Trash"><i class="bi bi-trash3"></i><span class="badge-dot" id="trashCount" hidden>0</span></button>
+      <button class="icon-btn" type="button" id="backupBtn" title="Backup & restore" aria-label="Backup and restore"><i class="bi bi-shield-check"></i></button>
+      <button class="icon-btn" type="button" id="ghBtn" title="GitHub sync" aria-label="GitHub sync"><i class="bi bi-github"></i></button>
+      <button class="icon-btn" type="button" id="themeToggle" aria-label="Toggle theme"><i class="bi bi-sun"></i></button>
+      </div>
+      <button class="btn-grad" type="button" id="newBtn"><i class="bi bi-plus-lg"></i><span class="hide-sm">새 업무</span></button>
+    </div>
+  </header>
+
+  <main class="container-xxl">
+    <div class="backup-nag" id="backupNag" role="status"><i class="bi bi-shield-exclamation fs-5" style="color:#a5b4fc"></i><span class="flex-grow-1" id="nagText">You haven't downloaded a backup yet.</span><button class="btn-soft sm" type="button" id="nagBackup"><i class="bi bi-download"></i> Download backup</button><button class="btn-soft sm" type="button" id="nagHide" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button></div>
+
+    <section class="panel-x" id="teamGuide" style="margin:0 0 1rem">
+      <h3><i class="bi bi-people-fill" style="color:#818cf8"></i>우리 AI 팀 합동 보드</h3>
+      <p class="mb-2">몽이와 대리들이 같은 보드에서 업무를 나눠 처리합니다. 여기서 바꾼 내용은 이 브라우저에 자동 저장되고, GitHub 저장소 <a href="https://github.com/drunken98-ops/ai-team-board" target="_blank" rel="noopener">ai-team-board</a>의 Issues와 동기화할 수 있습니다.</p>
+      <details>
+        <summary class="small" style="cursor:pointer">대리별 역할 · GitHub 동기화 설정 방법 보기</summary>
+        <div class="small mt-2" style="color:var(--muted)">
+          <ul class="mb-2">
+            <li><b>몽이</b> — 업무매니저. 지시를 나누고 결과를 취합해 보고</li>
+            <li><b>하대리</b> — 대구 지역 소식·자료 정리</li>
+            <li><b>인대리</b> — 우리 동네 소식 브리핑</li>
+            <li><b>부대리</b> — 드라이브·문서 작업</li>
+            <li><b>클로드코드</b> — 노션·슬랙 연동, 코드·자동화</li>
+            <li><b>큐대리</b> — 전국 단위 경품·이벤트 탐색</li>
+            <li><b>팔대리</b> — 메신저·메일 비서</li>
+          </ul>
+          <p class="mb-1"><b>GitHub 동기화 켜기:</b> 위쪽 GitHub 아이콘(<i class="bi bi-github"></i>) → Personal access token에 Fine-grained 토큰(이 저장소만, Issues: read &amp; write) 입력 → Owner <code>drunken98-ops</code>, Repository <code>ai-team-board</code> 입력 → 저장. «Pull from GitHub»를 누르면 저장소 Issues가 보드로 들어옵니다.</p>
+          <p class="mb-0">Issue 제목은 <code>[상태] 제목</code> 형식으로 오가고, 상태는 Backlog · Ready · In Progress · In Review · Done 다섯 가지입니다.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><small>전체 업무</small><b id="stTotal">0</b><span class="ic"><i class="bi bi-stack" style="color:#a5b4fc"></i></span></div>
+      <div class="stat"><small>진행 중</small><b id="stFlight">0</b><span class="ic"><i class="bi bi-rocket-takeoff" style="color:#818cf8"></i></span></div>
+      <div class="stat"><small>완료율</small><b id="stDone">0%</b><div class="bar"><span id="stDoneBar" style="width:0"></span></div><span class="ic"><i class="bi bi-check2-circle" style="color:#22c55e"></i></span></div>
+      <div class="stat"><small>기한 초과</small><b id="stOver">0</b><span class="ic"><i class="bi bi-alarm" style="color:#f87171"></i></span></div>
+      <div class="stat"><small>남은 시간</small><b id="stHours">0</b><span class="ic"><i class="bi bi-hourglass-split" style="color:#22d3ee"></i></span></div>
+    </section>
+
+    <div class="filters" role="toolbar" aria-label="Filters">
+      <button class="chip active" data-prio="all" type="button">전체</button>
+      <button class="chip" data-prio="High" type="button"><span class="pd" style="background:#f87171"></span>High</button>
+      <button class="chip" data-prio="Medium" type="button"><span class="pd" style="background:#f59e0b"></span>Medium</button>
+      <button class="chip" data-prio="Low" type="button"><span class="pd" style="background:#22c55e"></span>Low</button>
+      <button class="chip" data-flag="overdue" type="button"><i class="bi bi-alarm"></i>기한 초과</button>
+      <select id="fAssignee" aria-label="담당자 필터"><option value="">전체 담당</option></select>
+      <select id="fSort" aria-label="Sort tasks"><option value="manual">Sort: manual</option><option value="due">Sort: due date</option><option value="prio">Sort: priority</option><option value="new">Sort: newest</option></select>
+      <span class="ms-auto small" style="color:var(--muted)" id="filterInfo"></span>
+    </div>
+
+    <div id="welcome" class="welcome" hidden>
+      <div class="big"><i class="bi bi-kanban"></i></div>
+      <h1>우리 AI 팀 <span class="brand-x">합동 보드</span></h1>
+      <p>몽이와 대리들이 같은 보드에서 업무를 나눠 처리합니다. 모든 변경은 이 브라우저에 자동 저장되고, GitHub Issues와 동기화할 수 있습니다.</p>
+      <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <button class="btn-grad" type="button" id="welcomeNew"><i class="bi bi-plus-lg"></i> 첫 업무 만들기</button>
+        <button class="btn-soft" type="button" id="sampleBtn"><i class="bi bi-magic"></i> 예시 보드 불러오기</button>
+        <button class="btn-soft" type="button" id="welcomeImport"><i class="bi bi-upload"></i> 백업 복원</button>
+      </div>
+      <div class="ticks"><span><i class="bi bi-check2-circle"></i>자동 저장</span><span><i class="bi bi-check2-circle"></i>일별 스냅샷</span><span><i class="bi bi-check2-circle"></i>휴지통·복원</span><span><i class="bi bi-check2-circle"></i>GitHub 동기화(선택)</span></div>
+    </div>
+
+    <section class="board" id="board" aria-label="Task board"></section>
+
+    <footer class="d-flex flex-wrap justify-content-between gap-2">
+      <span>© <span id="year"></span> OpsFlow · by <a href="https://neuralcodelab.com" target="_blank" rel="noopener">Neural Code Lab</a></span>
+      <span><kbd class="bg-transparent text-reset border px-1">N</kbd> 새 업무 · <kbd class="bg-transparent text-reset border px-1">/</kbd> 검색 · <kbd class="bg-transparent text-reset border px-1">Esc</kbd> 닫기</span>
+    </footer>
+  </main>
+
+  <!-- ===== Task modal ===== -->
+  <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <form class="modal-content" id="taskForm" novalidate>
+        <div class="modal-header align-items-start gap-3">
+          <div class="flex-grow-1">
+            <span class="visually-hidden" id="taskModalTitle">Task</span>
+            <input class="form-control title-input" id="fTitle" placeholder="Task title" required maxlength="200" aria-label="Task title">
+            <div class="small mt-1" style="color:var(--muted)" id="taskMetaLine"></div>
+          </div>
+          <button type="button" class="btn-close mt-2" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="nav-pills-x mb-3" role="tablist">
+            <button type="button" class="active" data-tab="details">Details</button>
+            <button type="button" data-tab="checklist">Checklist <span id="clCount"></span></button>
+            <button type="button" data-tab="history">History</button>
+          </div>
+          <div data-pane="details">
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="fAssigneeIn">Assignee</label><input class="form-control" id="fAssigneeIn" list="people" placeholder="Who owns this?" maxlength="60"><datalist id="people"></datalist></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fStatus">Status</label><select class="form-select" id="fStatus"></select></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fPriority">Priority</label><select class="form-select" id="fPriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fStart">Start date</label><input type="date" class="form-control" id="fStart"></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fDue">Due date</label><input type="date" class="form-control" id="fDue"></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fEstimate">Estimate (h)</label><input type="number" class="form-control" id="fEstimate" min="0" step="0.5" placeholder="0"></div>
+              <div class="col-6 col-md-3"><label class="form-label" for="fSize">Size</label><select class="form-select" id="fSize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select></div>
+              <div class="col-md-6"><label class="form-label" for="fMilestone">Milestone</label><input class="form-control" id="fMilestone" placeholder="e.g. Sprint 4, Q4 launch" maxlength="80"></div>
+              <div class="col-md-6"><label class="form-label" for="fLabels">Labels</label><input class="form-control" id="fLabels" placeholder="bug, ivr, urgent" maxlength="200"></div>
+              <div class="col-12"><label class="form-label" for="fDesc">Description</label><textarea class="form-control" id="fDesc" rows="4" placeholder="Context, links, acceptance criteria…" maxlength="5000"></textarea></div>
+            </div>
+          </div>
+          <div data-pane="checklist" hidden>
+            <div class="d-flex gap-2 mb-3"><input class="form-control" id="clNew" placeholder="Add a checklist item and press Enter" maxlength="200"><button type="button" class="btn-soft" id="clAdd"><i class="bi bi-plus-lg"></i></button></div>
+            <div id="clList"></div>
+          </div>
+          <div data-pane="history" hidden><ul class="timeline" id="histList"></ul></div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <div class="d-flex gap-2" id="editOnly">
+            <button type="button" class="btn-soft danger" id="delBtn"><i class="bi bi-trash3"></i> Move to trash</button>
+            <button type="button" class="btn-soft" id="dupBtn"><i class="bi bi-copy"></i> Duplicate</button>
+          </div>
+          <button type="submit" class="btn-grad ms-auto"><i class="bi bi-check2"></i> <span id="saveLabel">Create task</span></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Backup modal ===== -->
+  <div class="modal fade" id="backupModal" tabindex="-1" aria-labelledby="backupTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="backupTitle"><i class="bi bi-shield-check me-2" style="color:#a5b4fc"></i>백업 · 복원</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><div class="panel-x h-100"><h3><i class="bi bi-download" style="color:#818cf8"></i>Download backup</h3><p>A JSON file with every task, checklist, history entry and the trash. Keep it somewhere safe.</p><div class="d-flex gap-2 flex-wrap"><button class="btn-grad" type="button" id="exportJson"><i class="bi bi-filetype-json"></i> Backup (.json)</button><button class="btn-soft" type="button" id="exportCsv"><i class="bi bi-filetype-csv"></i> CSV</button></div><div class="small mt-2" style="color:var(--muted)" id="lastBackup"></div></div></div>
+            <div class="col-md-6"><div class="panel-x h-100"><h3><i class="bi bi-upload" style="color:#22d3ee"></i>Restore from file</h3><p>Merge keeps your current tasks and adds the ones from the file. Replace swaps everything (a snapshot is taken first).</p><div class="d-flex gap-2 flex-wrap"><button class="btn-soft" type="button" data-import="merge"><i class="bi bi-intersect"></i> Merge</button><button class="btn-soft" type="button" data-import="replace"><i class="bi bi-arrow-repeat"></i> Replace</button></div><input type="file" id="importFile" accept=".json,application/json" hidden></div></div>
+            <div class="col-12"><div class="panel-x"><h3><i class="bi bi-camera" style="color:#a855f7"></i>Automatic snapshots</h3><p>OpsFlow keeps the last 10 snapshots in this browser: one per day, and one before every import, restore or empty-trash.</p><div id="snapList"></div><button class="btn-soft sm mt-2" type="button" id="snapNow"><i class="bi bi-camera"></i> Take snapshot now</button></div></div>
+            <div class="col-12"><div class="panel-x"><h3><i class="bi bi-hdd-stack" style="color:#22c55e"></i>Where your data lives</h3><p class="mb-2">Saved on every change in two places inside this browser (localStorage + IndexedDB). It survives closing the tab, restarting the computer and updates. It is only lost if you clear this site's browsing data, use a private window, or switch browser or device — that's what the backup file is for.</p><div class="small" id="storageInfo"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Trash modal ===== -->
+  <div class="modal fade" id="trashModal" tabindex="-1" aria-labelledby="trashTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="trashTitle"><i class="bi bi-trash3 me-2" style="color:#f87171"></i>휴지통</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body"><p class="small" style="color:var(--muted)">Deleted tasks stay here until you empty the trash.</p><div id="trashList"></div></div>
+        <div class="modal-footer" id="trashFoot">
+          <button class="btn-soft danger" type="button" id="emptyTrash"><i class="bi bi-trash3"></i> Empty trash</button>
+          <div class="confirm-bar" id="emptyConfirm" hidden>
+            <span><i class="bi bi-exclamation-triangle-fill"></i> <span id="emptyMsg">Delete forever?</span></span>
+            <span class="d-flex gap-2"><button class="btn-soft sm" type="button" id="emptyCancel">Cancel</button><button class="btn-danger-x" type="button" id="emptyYes"><i class="bi bi-trash3-fill"></i> Delete forever</button></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GitHub modal ===== -->
+  <div class="modal fade" id="ghModal" tabindex="-1" aria-labelledby="ghTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" id="ghForm">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="ghTitle"><i class="bi bi-github me-2"></i>GitHub Issues 동기화</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+          <p class="small" style="color:var(--muted)">선택 사항입니다. 새로 만들거나 수정한 업무가 저장소의 Issue로 함께 기록됩니다. «Pull from GitHub»를 누르면 저장소의 Issue가 보드로 합쳐지며, 이 브라우저의 업무가 지워지지 않습니다.</p>
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label" for="ghToken">Personal access token (Fine-grained)</label><input type="password" class="form-control" id="ghToken" placeholder="github_pat_… or ghp_…" autocomplete="off"></div>
+            <div class="col-6"><label class="form-label" for="ghUser">Owner (계정)</label><input class="form-control" id="ghUser" placeholder="your-user"></div>
+            <div class="col-6"><label class="form-label" for="ghRepo">Repository (저장소)</label><input class="form-control" id="ghRepo" placeholder="your-repo"></div>
+            <div class="col-6"><label class="form-label" for="ghProject">Project 번호 (선택)</label><input type="number" class="form-control" id="ghProject" min="1"></div>
+            <div class="col-6 d-flex align-items-end"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="ghAuto" checked><label class="form-check-label small" for="ghAuto">변경 사항 자동으로 올리기</label></div></div>
+          </div>
+          <div class="warn-box mt-3"><i class="bi bi-exclamation-triangle-fill"></i><span>토큰은 이 브라우저에만 저장되고 백업 파일에는 포함되지 않습니다. 이 저장소로만 제한한 Fine-grained 토큰에 Issues: read &amp; write 권한을 주세요.</span></div>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn-soft" id="ghPull"><i class="bi bi-cloud-download"></i> Pull from GitHub</button>
+          <div class="d-flex gap-2"><button type="button" class="btn-soft danger" id="ghForget">Forget token</button><button type="submit" class="btn-grad"><i class="bi bi-check2"></i> Save</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Activity ===== -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="activityPanel" aria-labelledby="actTitle">
+    <div class="offcanvas-header"><h2 class="offcanvas-title fs-5" id="actTitle"><i class="bi bi-clock-history me-2" style="color:#a5b4fc"></i>활동 기록</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
+    <div class="offcanvas-body"><ul class="timeline" id="actList"></ul></div>
+  </div>
+
+  <div class="toast-x" id="toast" role="status"><span id="toastText"></span><button type="button" id="toastAction" hidden>Undo</button></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  (() => {
+    'use strict';
+    /* =========================================================
+       Constants
+       ========================================================= */
+    const KEY = 'opsflow:data', SNAP_KEY = 'opsflow:snapshots', PREF_KEY = 'opsflow:prefs', GH_KEY = 'opsflow:github';
+    const MAX_SNAPS = 10, MAX_ACTIVITY = 300, MAX_HISTORY = 80;
+    const STATUSES = [
+      { id: 'Backlog', icon: 'bi-inbox', color: 'var(--c-backlog)' },
+      { id: 'Ready', icon: 'bi-bullseye', color: 'var(--c-ready)' },
+      { id: 'In Progress', icon: 'bi-rocket-takeoff', color: 'var(--c-progress)' },
+      { id: 'In Review', icon: 'bi-eye', color: 'var(--c-review)' },
+      { id: 'Done', icon: 'bi-check2-circle', color: 'var(--c-done)' },
+    ];
+    const PRIO = { High: { c: '#f87171', w: 0 }, Medium: { c: '#f59e0b', w: 1 }, Low: { c: '#22c55e', w: 2 } };
+    const AV = ['#6366f1', '#a855f7', '#06b6d4', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'];
+
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const now = () => new Date().toISOString();
+    const ls = {
+      get(k, d = null) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+    };
+    const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+    const parseDay = (s) => s ? new Date(s + 'T00:00:00') : null;
+    const rel = (iso) => {
+      const s = (Date.now() - new Date(iso)) / 1000;
+      if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+      if (s < 86400) return `${Math.floor(s / 3600)} h ago`; if (s < 86400 * 30) return `${Math.floor(s / 86400)} d ago`;
+      return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    const fmtDay = (s) => parseDay(s).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const initials = (n) => (n || '?').trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || '?';
+    const avColor = (n) => AV[[...(n || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
+
+    /* =========================================================
+       Storage: localStorage + IndexedDB mirror
+       ========================================================= */
+    const idb = {
+      db: null,
+      open() {
+        return new Promise((res) => {
+          try {
+            const r = indexedDB.open('opsflow', 1);
+            r.onupgradeneeded = () => r.result.createObjectStore('kv');
+            r.onsuccess = () => { this.db = r.result; res(this.db); };
+            r.onerror = () => res(null);
+          } catch { res(null); }
+        });
+      },
+      get(k) { return new Promise((res) => { if (!this.db) return res(null); try { const q = this.db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result ?? null); q.onerror = () => res(null); } catch { res(null); } }); },
+      set(k, v) { return new Promise((res) => { if (!this.db) return res(false); try { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(true); t.onerror = () => res(false); } catch { res(false); } }); },
+    };
+
+    const blank = () => ({ app: 'opsflow', version: 1, savedAt: null, tasks: [], trash: [], activity: [], lastBackupAt: null });
+    let S = blank();
+    let saveTimer = null;
+
+    const normTask = (t) => ({
+      id: String(t.id ?? uid()), title: String(t.title ?? 'Untitled').slice(0, 200), desc: String(t.desc ?? ''),
+      assignee: String(t.assignee ?? ''), priority: PRIO[t.priority] ? t.priority : 'Medium',
+      status: STATUSES.some((s) => s.id === t.status) ? t.status : 'Backlog',
+      size: t.size || 'M', startDate: t.startDate || '', dueDate: t.dueDate || '', estimate: Number(t.estimate) || 0,
+      milestone: t.milestone || '', labels: Array.isArray(t.labels) ? t.labels.map(String) : [],
+      checklist: Array.isArray(t.checklist) ? t.checklist.map((c) => ({ id: String(c.id ?? uid()), text: String(c.text ?? ''), done: !!c.done })) : [],
+      createdAt: t.createdAt || now(), updatedAt: t.updatedAt || now(), completedAt: t.completedAt || null,
+      order: Number.isFinite(t.order) ? t.order : Date.now(), githubIssue: t.githubIssue || null,
+      history: Array.isArray(t.history) ? t.history.slice(-MAX_HISTORY) : [], deletedAt: t.deletedAt || null,
+    });
+    const normalize = (d) => {
+      const o = blank();
+      if (!d || typeof d !== 'object') return o;
+      o.tasks = (d.tasks || []).map(normTask);
+      o.trash = (d.trash || []).map(normTask);
+      o.activity = Array.isArray(d.activity) ? d.activity.slice(0, MAX_ACTIVITY) : [];
+      o.savedAt = d.savedAt || null; o.lastBackupAt = d.lastBackupAt || null;
+      return o;
+    };
+
+    function save(immediate = false) {
+      const st = $('#saveState'); st.classList.add('saving'); st.innerHTML = '<i class="bi bi-arrow-repeat"></i><span>Saving…</span>';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        S.savedAt = now();
+        const okLs = ls.set(KEY, S);
+        const okDb = await idb.set(KEY, JSON.parse(JSON.stringify(S)));
+        st.classList.remove('saving');
+        st.innerHTML = okLs || okDb ? '<i class="bi bi-cloud-check-fill"></i><span>Saved</span>' : '<i class="bi bi-exclamation-triangle-fill" style="color:#f87171"></i><span>Not saved</span>';
+        if (!okLs && !okDb) toast('Could not save — download a backup now.');
+      }, immediate ? 0 : 250);
+    }
+
+    async function load() {
+      await idb.open();
+      const a = ls.get(KEY), b = await idb.get(KEY);
+      // Use whichever copy is newer; this recovers data if one store was cleared.
+      const pick = [a, b].filter(Boolean).sort((x, y) => new Date(y.savedAt || 0) - new Date(x.savedAt || 0))[0];
+      S = normalize(pick);
+      if (pick && (!a || !b)) save(true);
+      if (navigator.storage?.persist) { try { await navigator.storage.persist(); } catch {} }
+    }
+
+    /* ---------- Snapshots ---------- */
+    const snaps = () => ls.get(SNAP_KEY, []);
+    function snapshot(reason) {
+      if (!S.tasks.length && !S.trash.length) return;
+      const list = snaps();
+      list.unshift({ id: uid(), at: now(), reason, count: S.tasks.length, data: S });
+      while (list.length > MAX_SNAPS) list.pop();
+      if (!ls.set(SNAP_KEY, list)) { list.splice(3); ls.set(SNAP_KEY, list); }
+    }
+    function dailySnapshot() {
+      const last = snaps()[0];
+      if (!last || Date.now() - new Date(last.at) > 20 * 3600 * 1000) snapshot('Daily snapshot');
+    }
+
+    /* ---------- Activity / history ---------- */
+    function log(task, text, color) {
+      const e = { at: now(), text, color: color || null };
+      if (task) { task.history.push(e); if (task.history.length > MAX_HISTORY) task.history.shift(); }
+      S.activity.unshift({ ...e, task: task ? task.title : null });
+      if (S.activity.length > MAX_ACTIVITY) S.activity.length = MAX_ACTIVITY;
+    }
+
+    /* =========================================================
+       UI state
+       ========================================================= */
+    const prefs = Object.assign({ theme: null, prio: 'all', overdue: false, assignee: '', sort: 'manual', nagHiddenAt: null }, ls.get(PREF_KEY, {}));
+    const savePrefs = () => ls.set(PREF_KEY, prefs);
+    let query = '';
+    let editing = null;      // task being edited (or null for new)
+    let draft = null;        // working copy for the modal
+    const taskModal = new bootstrap.Modal('#taskModal');
+    const backupModal = new bootstrap.Modal('#backupModal');
+    const trashModal = new bootstrap.Modal('#trashModal');
+    const ghModal = new bootstrap.Modal('#ghModal');
+    $('#year').textContent = new Date().getFullYear();
+
+    /* ---------- Theme ---------- */
+    const root = document.documentElement;
+    const applyTheme = (t) => {
+      root.dataset.theme = t;
+      $('#themeToggle').innerHTML = t === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+      $('meta[name="theme-color"]').content = t === 'dark' ? '#07071a' : '#f6f7fc';
+    };
+    applyTheme(prefs.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+    $('#themeToggle').addEventListener('click', () => { prefs.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; applyTheme(prefs.theme); savePrefs(); });
+
+    /* ---------- Toast ---------- */
+    let toastT;
+    function toast(text, action, label = 'Undo') {
+      const el = $('#toast'), btn = $('#toastAction');
+      $('#toastText').textContent = text;
+      btn.hidden = !action; btn.textContent = label;
+      btn.onclick = () => { el.classList.remove('show'); action && action(); };
+      el.classList.add('show'); clearTimeout(toastT);
+      toastT = setTimeout(() => el.classList.remove('show'), action ? 6000 : 2600);
+    }
+
+    /* =========================================================
+       Rendering
+       ========================================================= */
+    const isOverdue = (t) => t.dueDate && t.status !== 'Done' && parseDay(t.dueDate) < today();
+    const isSoon = (t) => t.dueDate && t.status !== 'Done' && !isOverdue(t) && (parseDay(t.dueDate) - today()) / 86400000 <= 2;
+
+    function visible(t) {
+      if (prefs.prio !== 'all' && t.priority !== prefs.prio) return false;
+      if (prefs.overdue && !isOverdue(t)) return false;
+      if (prefs.assignee && t.assignee !== prefs.assignee) return false;
+      if (query) {
+        const hay = [t.title, t.desc, t.assignee, t.milestone, ...t.labels, ...t.checklist.map((c) => c.text)].join(' ').toLowerCase();
+        if (!query.split(/\s+/).every((w) => hay.includes(w))) return false;
+      }
+      return true;
+    }
+    const sorter = {
+      manual: (a, b) => a.order - b.order,
+      due: (a, b) => (a.dueDate || '9999') .localeCompare(b.dueDate || '9999') || a.order - b.order,
+      prio: (a, b) => PRIO[a.priority].w - PRIO[b.priority].w || a.order - b.order,
+      new: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    };
+
+    function cardHTML(t) {
+      const done = t.checklist.filter((c) => c.done).length, total = t.checklist.length;
+      const due = t.dueDate ? `<span class="due ${isOverdue(t) ? 'over' : isSoon(t) ? 'soon' : ''}"><i class="bi bi-calendar-event"></i> ${esc(fmtDay(t.dueDate))}</span>` : '';
+      return `
+        <div class="task-top">
+          <span class="tag prio">${esc(t.priority)}</span><span class="tag">${esc(t.size)}</span>
+          ${t.estimate ? `<span class="tag"><i class="bi bi-hourglass"></i>${esc(t.estimate)}h</span>` : ''}
+          ${t.githubIssue ? `<span class="tag ms-auto" title="GitHub issue"><i class="bi bi-github"></i>#${esc(t.githubIssue)}</span>` : ''}
+        </div>
+        <h3 class="task-title">${esc(t.title)}</h3>
+        ${t.labels.length ? `<div class="labels">${t.labels.slice(0, 3).map((l) => `<span class="label">${esc(l)}</span>`).join('')}${t.labels.length > 3 ? `<span class="label">+${t.labels.length - 3}</span>` : ''}</div>` : ''}
+        <div class="task-meta">
+          ${due}
+          ${total ? `<span><i class="bi bi-check2-square"></i> ${done}/${total}</span>` : ''}
+          ${t.desc ? '<span title="Has description"><i class="bi bi-text-left"></i></span>' : ''}
+          ${t.milestone ? `<span><i class="bi bi-flag"></i> ${esc(t.milestone)}</span>` : ''}
+          ${t.assignee ? `<span class="avatar" style="background:${avColor(t.assignee)}" title="${esc(t.assignee)}">${esc(initials(t.assignee))}</span>` : ''}
+        </div>
+        ${total ? `<div class="cl-bar"><span style="width:${Math.round(done / total * 100)}%"></span></div>` : ''}`;
+    }
+
+    function render() {
+      const board = $('#board');
+      const empty = !S.tasks.length;
+      $('#welcome').hidden = !empty;
+      board.hidden = empty;
+      const shown = S.tasks.filter(visible);
+      board.innerHTML = '';
+      STATUSES.forEach((s) => {
+        const col = document.createElement('div');
+        col.className = 'col'; col.dataset.status = s.id; col.style.setProperty('--col', s.color);
+        const items = shown.filter((t) => t.status === s.id).sort(sorter[prefs.sort]);
+        col.innerHTML = `<div class="col-head"><span class="dot"></span><h2>${esc(s.id)}</h2><span class="n">${items.length}</span><button class="add" type="button" title="Add to ${esc(s.id)}" aria-label="Add task to ${esc(s.id)}"><i class="bi bi-plus-lg"></i></button></div><div class="col-body"></div>`;
+        const body = $('.col-body', col);
+        if (!items.length) body.innerHTML = `<div class="col-empty"><div><i class="bi ${s.icon} fs-4 d-block mb-1"></i>${query || prefs.prio !== 'all' || prefs.overdue || prefs.assignee ? 'No matches' : 'Drop tasks here'}</div></div>`;
+        items.forEach((t, i) => {
+          const el = document.createElement('article');
+          el.className = 'task' + (t.status === 'Done' ? ' done' : '');
+          el.draggable = true; el.tabIndex = 0; el.dataset.id = t.id;
+          el.style.setProperty('--pc', PRIO[t.priority].c); el.style.animationDelay = `${Math.min(i, 10) * 30}ms`;
+          el.setAttribute('aria-label', `${t.title}, ${t.priority} priority`);
+          el.innerHTML = cardHTML(t);
+          body.appendChild(el);
+        });
+        $('.add', col).addEventListener('click', () => openTask(null, s.id));
+        bindDrop(col);
+        board.appendChild(col);
+      });
+      renderStats(); renderFilters(); renderTrashCount(); renderNag();
+      const n = shown.length, all = S.tasks.length;
+      $('#filterInfo').textContent = n === all ? '' : `Showing ${n} of ${all}`;
+    }
+
+    function renderStats() {
+      const t = S.tasks, done = t.filter((x) => x.status === 'Done').length;
+      const pct = t.length ? Math.round(done / t.length * 100) : 0;
+      $('#stTotal').textContent = t.length;
+      $('#stFlight').textContent = t.filter((x) => x.status === 'In Progress' || x.status === 'In Review').length;
+      $('#stDone').textContent = pct + '%'; $('#stDoneBar').style.width = pct + '%';
+      $('#stOver').textContent = t.filter(isOverdue).length;
+      $('#stHours').textContent = t.filter((x) => x.status !== 'Done').reduce((a, x) => a + x.estimate, 0).toLocaleString('en');
+    }
+    function renderFilters() {
+      $$('.chip[data-prio]').forEach((c) => c.classList.toggle('active', c.dataset.prio === prefs.prio));
+      $('.chip[data-flag="overdue"]').classList.toggle('active', prefs.overdue);
+      const people = [...new Set(S.tasks.map((t) => t.assignee).filter(Boolean))].sort();
+      const sel = $('#fAssignee');
+      sel.innerHTML = '<option value="">Everyone</option>' + people.map((p) => `<option ${p === prefs.assignee ? 'selected' : ''}>${esc(p)}</option>`).join('');
+      if (prefs.assignee && !people.includes(prefs.assignee)) { prefs.assignee = ''; }
+      $('#people').innerHTML = people.map((p) => `<option value="${esc(p)}">`).join('');
+      $('#fSort').value = prefs.sort;
+    }
+    function renderTrashCount() { const b = $('#trashCount'); b.hidden = !S.trash.length; b.textContent = S.trash.length; }
+    function renderNag() {
+      const nag = $('#backupNag');
+      const stale = !S.lastBackupAt || Date.now() - new Date(S.lastBackupAt) > 7 * 86400000;
+      const hidden = prefs.nagHiddenAt && Date.now() - new Date(prefs.nagHiddenAt) < 3 * 86400000;
+      nag.classList.toggle('on', S.tasks.length >= 3 && stale && !hidden);
+      $('#nagText').textContent = S.lastBackupAt ? `Your last backup was ${rel(S.lastBackupAt)}. Download a fresh copy to keep your board safe.` : `You have ${S.tasks.length} tasks and no backup file yet. Download one to keep your board safe.`;
+    }
+
+    /* ---------- Board events ---------- */
+    $('#board').addEventListener('click', (e) => { const c = e.target.closest('.task'); if (c) openTask(S.tasks.find((t) => t.id === c.dataset.id)); });
+    $('#board').addEventListener('keydown', (e) => { const c = e.target.closest('.task'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openTask(S.tasks.find((t) => t.id === c.dataset.id)); } });
+    let dragId = null;
+    $('#board').addEventListener('dragstart', (e) => { const c = e.target.closest('.task'); if (!c) return; dragId = c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); });
+    $('#board').addEventListener('dragend', (e) => { e.target.closest?.('.task')?.classList.remove('dragging'); $$('.col.over').forEach((c) => c.classList.remove('over')); });
+    function bindDrop(col) {
+      col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('over'); });
+      col.addEventListener('dragleave', (e) => { if (!col.contains(e.relatedTarget)) col.classList.remove('over'); });
+      col.addEventListener('drop', (e) => {
+        e.preventDefault(); col.classList.remove('over');
+        const t = S.tasks.find((x) => x.id === (dragId || e.dataTransfer.getData('text/plain'))); dragId = null;
+        if (!t) return;
+        // Order: place before the card under the cursor, or at the end
+        const after = [...$$('.task', col)].filter((c) => c.dataset.id !== t.id).find((c) => e.clientY < c.getBoundingClientRect().top + c.offsetHeight / 2);
+        const colTasks = S.tasks.filter((x) => x.status === col.dataset.status && x.id !== t.id).sort((a, b) => a.order - b.order);
+        const idx = after ? colTasks.findIndex((x) => x.id === after.dataset.id) : colTasks.length;
+        const prev = colTasks[idx - 1], next = colTasks[idx];
+        t.order = prev && next ? (prev.order + next.order) / 2 : prev ? prev.order + 1000 : next ? next.order - 1000 : Date.now();
+        if (prefs.sort !== 'manual') { prefs.sort = 'manual'; savePrefs(); }
+        moveTo(t, col.dataset.status);
+      });
+    }
+    function moveTo(t, status) {
+      const from = t.status;
+      if (from !== status) {
+        t.status = status; t.updatedAt = now();
+        t.completedAt = status === 'Done' ? now() : null;
+        log(t, `Moved from ${from} to ${status}`, STATUSES.find((s) => s.id === status).color);
+        gh.push(t);
+      }
+      save(); render();
+    }
+
+    /* ---------- Filters / search ---------- */
+    $$('.chip[data-prio]').forEach((c) => c.addEventListener('click', () => { prefs.prio = c.dataset.prio; savePrefs(); render(); }));
+    $('.chip[data-flag="overdue"]').addEventListener('click', () => { prefs.overdue = !prefs.overdue; savePrefs(); render(); });
+    $('#fAssignee').addEventListener('change', (e) => { prefs.assignee = e.target.value; savePrefs(); render(); });
+    $('#fSort').addEventListener('change', (e) => { prefs.sort = e.target.value; savePrefs(); render(); });
+    let qT; $('#search').addEventListener('input', (e) => { clearTimeout(qT); qT = setTimeout(() => { query = e.target.value.trim().toLowerCase(); render(); }, 120); });
+
+    /* =========================================================
+       Task modal
+       ========================================================= */
+    $('#fStatus').innerHTML = STATUSES.map((s) => `<option>${esc(s.id)}</option>`).join('');
+    const showTab = (name) => { $$('.nav-pills-x button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name)); $$('[data-pane]').forEach((p) => p.hidden = p.dataset.pane !== name); };
+    $$('.nav-pills-x button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+    function openTask(task, status) {
+      editing = task || null;
+      draft = task ? JSON.parse(JSON.stringify(task)) : normTask({ status: status || 'Backlog', title: '' });
+      draft.title = task ? task.title : '';
+      $('#fTitle').value = draft.title; $('#fAssigneeIn').value = draft.assignee; $('#fStatus').value = draft.status;
+      $('#fPriority').value = draft.priority; $('#fStart').value = draft.startDate; $('#fDue').value = draft.dueDate;
+      $('#fEstimate').value = draft.estimate || ''; $('#fSize').value = draft.size; $('#fMilestone').value = draft.milestone;
+      $('#fLabels').value = draft.labels.join(', '); $('#fDesc').value = draft.desc;
+      $('#editOnly').style.visibility = task ? 'visible' : 'hidden';
+      $('#saveLabel').textContent = task ? 'Save changes' : 'Create task';
+      $('#taskMetaLine').textContent = task ? `Created ${rel(task.createdAt)} · updated ${rel(task.updatedAt)}${task.githubIssue ? ` · GitHub #${task.githubIssue}` : ''}` : 'New task';
+      $$('.nav-pills-x button')[2].hidden = !task;
+      renderChecklist(); renderHistory(); showTab('details');
+      taskModal.show();
+    }
+    $('#taskModal').addEventListener('shown.bs.modal', () => $('#fTitle').focus());
+
+    function renderChecklist() {
+      const done = draft.checklist.filter((c) => c.done).length;
+      $('#clCount').textContent = draft.checklist.length ? `${done}/${draft.checklist.length}` : '';
+      $('#clList').innerHTML = draft.checklist.length ? draft.checklist.map((c) => `
+        <div class="cl-item ${c.done ? 'done' : ''}" data-id="${esc(c.id)}"><input type="checkbox" ${c.done ? 'checked' : ''} aria-label="Done"><span>${esc(c.text)}</span><button type="button" aria-label="Remove item"><i class="bi bi-x-lg"></i></button></div>`).join('')
+        : '<p class="small" style="color:var(--muted)">No items yet. Break the task into small steps.</p>';
+    }
+    function addCl() { const v = $('#clNew').value.trim(); if (!v) return; draft.checklist.push({ id: uid(), text: v, done: false }); $('#clNew').value = ''; renderChecklist(); }
+    $('#clAdd').addEventListener('click', addCl);
+    $('#clNew').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addCl(); } });
+    $('#clList').addEventListener('click', (e) => {
+      const row = e.target.closest('.cl-item'); if (!row) return;
+      const item = draft.checklist.find((c) => c.id === row.dataset.id);
+      if (e.target.closest('button')) draft.checklist = draft.checklist.filter((c) => c !== item);
+      else if (e.target.matches('input')) item.done = e.target.checked;
+      else return;
+      renderChecklist();
+    });
+    function renderHistory() {
+      const h = (editing?.history || []).slice().reverse();
+      $('#histList').innerHTML = h.length ? h.map((e) => `<li style="--tc:${e.color || 'var(--indigo)'}">${esc(e.text)}<time datetime="${esc(e.at)}">${esc(rel(e.at))} · ${esc(new Date(e.at).toLocaleString('en'))}</time></li>`).join('') : '<p class="small" style="color:var(--muted)">No history yet.</p>';
+    }
+
+    $('#taskForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = $('#fTitle').value.trim();
+      if (!title) { $('#fTitle').focus(); toast('Give the task a title'); return; }
+      const v = {
+        title, assignee: $('#fAssigneeIn').value.trim(), status: $('#fStatus').value, priority: $('#fPriority').value,
+        startDate: $('#fStart').value, dueDate: $('#fDue').value, estimate: Math.max(0, parseFloat($('#fEstimate').value) || 0),
+        size: $('#fSize').value, milestone: $('#fMilestone').value.trim(), desc: $('#fDesc').value,
+        labels: [...new Set($('#fLabels').value.split(',').map((l) => l.trim()).filter(Boolean))], checklist: draft.checklist,
+      };
+      if (editing) {
+        const changes = [];
+        const names = { title: 'title', assignee: 'assignee', priority: 'priority', dueDate: 'due date', startDate: 'start date', estimate: 'estimate', size: 'size', milestone: 'milestone', desc: 'description' };
+        Object.keys(names).forEach((k) => { if (String(editing[k] ?? '') !== String(v[k] ?? '')) changes.push(names[k]); });
+        if (editing.labels.join() !== v.labels.join()) changes.push('labels');
+        if (JSON.stringify(editing.checklist) !== JSON.stringify(v.checklist)) changes.push('checklist');
+        const statusChanged = editing.status !== v.status, from = editing.status;
+        Object.assign(editing, v, { updatedAt: now() });
+        if (statusChanged) { editing.completedAt = v.status === 'Done' ? now() : null; log(editing, `Moved from ${from} to ${v.status}`, STATUSES.find((s) => s.id === v.status).color); }
+        if (changes.length) log(editing, `Edited ${changes.join(', ')}`);
+        gh.push(editing);
+        toast('Task updated');
+      } else {
+        const t = normTask({ ...v, id: uid(), createdAt: now(), updatedAt: now(), completedAt: v.status === 'Done' ? now() : null, order: Date.now() });
+        log(t, `Created in ${t.status}`, '#22c55e');
+        S.tasks.push(t); gh.push(t);
+        toast('Task created');
+      }
+      save(); render(); taskModal.hide();
+    });
+
+    function trashTask(t) {
+      S.tasks = S.tasks.filter((x) => x !== t);
+      t.deletedAt = now(); log(t, 'Moved to trash', '#f87171');
+      S.trash.unshift(t); save(); render();
+      toast(`“${t.title}” moved to trash`, () => restoreTask(t.id));
+    }
+    function restoreTask(id) {
+      const t = S.trash.find((x) => x.id === id); if (!t) return;
+      S.trash = S.trash.filter((x) => x !== t); t.deletedAt = null; log(t, 'Restored from trash', '#22c55e');
+      S.tasks.push(t); save(); render(); renderTrash(); toast('Task restored');
+    }
+    $('#delBtn').addEventListener('click', () => { if (editing) { const t = editing; taskModal.hide(); trashTask(t); } });
+    $('#dupBtn').addEventListener('click', () => {
+      if (!editing) return;
+      const c = normTask({ ...JSON.parse(JSON.stringify(editing)), id: uid(), title: editing.title + ' (copy)', createdAt: now(), updatedAt: now(), githubIssue: null, history: [], order: editing.order + 1 });
+      c.checklist = c.checklist.map((i) => ({ ...i, id: uid(), done: false }));
+      log(c, `Duplicated from “${editing.title}”`, '#a855f7');
+      S.tasks.push(c); save(); render(); taskModal.hide(); toast('Task duplicated');
+    });
+
+    /* =========================================================
+       Trash
+       ========================================================= */
+    function renderTrash() {
+      $('#trashList').innerHTML = S.trash.length ? S.trash.map((t) => `
+        <div class="snap" data-id="${esc(t.id)}"><i class="bi bi-file-earmark-x" style="color:#f87171"></i><div class="when"><div class="fw-semibold">${esc(t.title)}</div><small>${esc(t.status)} · deleted ${esc(rel(t.deletedAt))}</small></div>
+        <button class="btn-soft sm" type="button" data-act="restore"><i class="bi bi-arrow-counterclockwise"></i> Restore</button>
+        <button class="btn-soft sm danger" type="button" data-act="kill" aria-label="Delete forever"><i class="bi bi-x-lg"></i></button></div>`).join('')
+        : '<div class="text-center py-4" style="color:var(--muted)"><i class="bi bi-trash3 fs-2 d-block mb-2"></i>Trash is empty</div>';
+      $('#emptyTrash').disabled = !S.trash.length;
+    }
+    $('#trashBtn').addEventListener('click', () => { renderTrash(); trashModal.show(); });
+    $('#trashList').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const id = b.closest('.snap').dataset.id;
+      if (b.dataset.act === 'restore') restoreTask(id);
+      else {
+        const t = S.trash.find((x) => x.id === id);
+        if (!confirmTwice(b, 'Delete?')) return;
+        snapshot(`Before deleting “${t.title}” forever`);
+        S.trash = S.trash.filter((x) => x.id !== id); log(null, `Deleted “${t.title}” forever`, '#f87171'); save(); render(); renderTrash();
+      }
+    });
+    const showEmptyConfirm = (on) => {
+      $('#emptyConfirm').hidden = !on; $('#emptyTrash').hidden = on;
+      if (on) { $('#emptyMsg').textContent = `Delete ${S.trash.length} ${S.trash.length === 1 ? 'task' : 'tasks'} forever?`; $('#emptyYes').focus(); }
+    };
+    $('#emptyTrash').addEventListener('click', () => { if (S.trash.length) showEmptyConfirm(true); });
+    $('#emptyCancel').addEventListener('click', () => showEmptyConfirm(false));
+    $('#emptyYes').addEventListener('click', () => {
+      snapshot('Before emptying trash');
+      const n = S.trash.length; S.trash = []; log(null, `Emptied trash (${n} tasks)`, '#f87171');
+      save(true); render(); renderTrash(); showEmptyConfirm(false);
+      toast(`Deleted ${n} ${n === 1 ? 'task' : 'tasks'} forever — a snapshot was saved`);
+    });
+    $('#trashModal').addEventListener('hidden.bs.modal', () => showEmptyConfirm(false));
+    // Two-step confirm without blocking dialogs
+    function confirmTwice(btn, text) {
+      if (btn.dataset.armed) { clearTimeout(btn._t); delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn._old; return true; }
+      btn._old = btn.innerHTML; btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = text;
+      btn._t = setTimeout(() => { delete btn.dataset.armed; btn.classList.remove('armed'); btn.innerHTML = btn._old; }, 5000);
+      return false;
+    }
+
+    /* =========================================================
+       Backup & restore
+       ========================================================= */
+    function download(name, content, type) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content], { type }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+    }
+    const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    function exportJson() {
+      S.lastBackupAt = now(); save(true);
+      download(`opsflow-backup-${stamp()}.json`, JSON.stringify({ ...S, exportedAt: now() }, null, 2), 'application/json');
+      log(null, 'Downloaded a backup', '#818cf8'); renderBackup(); renderNag(); toast(`Backup downloaded (${S.tasks.length} tasks)`);
+    }
+    function exportCsv() {
+      const cols = ['title', 'status', 'priority', 'assignee', 'size', 'estimate', 'startDate', 'dueDate', 'milestone', 'labels', 'checklist', 'createdAt', 'completedAt', 'githubIssue', 'desc'];
+      const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const rows = S.tasks.map((t) => cols.map((c) => c === 'labels' ? q(t.labels.join(', ')) : c === 'checklist' ? q(`${t.checklist.filter((x) => x.done).length}/${t.checklist.length}`) : q(t[c])).join(','));
+      download(`opsflow-tasks-${stamp()}.csv`, '﻿' + [cols.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8');
+      toast('CSV exported');
+    }
+    $('#exportJson').addEventListener('click', exportJson);
+    $('#nagBackup').addEventListener('click', exportJson);
+    $('#nagHide').addEventListener('click', () => { prefs.nagHiddenAt = now(); savePrefs(); renderNag(); });
+    $('#exportCsv').addEventListener('click', exportCsv);
+
+    let importMode = 'merge';
+    $$('[data-import]').forEach((b) => b.addEventListener('click', () => { importMode = b.dataset.import; $('#importFile').click(); }));
+    $('#welcomeImport').addEventListener('click', () => { importMode = 'replace'; $('#importFile').click(); });
+    $('#importFile').addEventListener('change', async (e) => {
+      const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+      try {
+        const data = JSON.parse(await f.text());
+        if (!data || !Array.isArray(data.tasks)) throw new Error('This file is not an OpsFlow backup.');
+        const inc = normalize(data);
+        snapshot(importMode === 'replace' ? 'Before replacing from backup' : 'Before merging a backup');
+        if (importMode === 'replace') {
+          S = { ...inc, lastBackupAt: S.lastBackupAt };
+          log(null, `Restored ${inc.tasks.length} tasks from ${f.name}`, '#22d3ee');
+        } else {
+          let added = 0, updated = 0;
+          inc.tasks.forEach((t) => {
+            const cur = S.tasks.find((x) => x.id === t.id);
+            if (!cur) { S.tasks.push(t); added++; }
+            else if (new Date(t.updatedAt) > new Date(cur.updatedAt)) { Object.assign(cur, t); updated++; }
+          });
+          inc.trash.forEach((t) => { if (!S.trash.some((x) => x.id === t.id) && !S.tasks.some((x) => x.id === t.id)) S.trash.push(t); });
+          log(null, `Merged backup ${f.name}: ${added} added, ${updated} updated`, '#22d3ee');
+        }
+        save(true); render(); renderBackup(); backupModal.hide(); toast(`Backup ${importMode === 'replace' ? 'restored' : 'merged'} — ${S.tasks.length} tasks`);
+      } catch (err) { toast(err.message.includes('OpsFlow') ? err.message : 'Could not read that file. Is it a valid OpsFlow backup?'); }
+    });
+
+    async function renderBackup() {
+      $('#lastBackup').innerHTML = S.lastBackupAt ? `<i class="bi bi-check-circle-fill status-ok"></i> Last backup ${esc(rel(S.lastBackupAt))}` : '<i class="bi bi-exclamation-circle-fill status-warn"></i> No backup downloaded yet';
+      const list = snaps();
+      $('#snapList').innerHTML = list.length ? list.map((s) => `
+        <div class="snap" data-id="${esc(s.id)}"><i class="bi bi-camera" style="color:#a855f7"></i><div class="when"><div class="fw-semibold">${esc(s.reason)}</div><small>${esc(rel(s.at))} · ${esc(s.count)} tasks</small></div>
+        <button class="btn-soft sm" type="button" data-act="restore">Restore</button><button class="btn-soft sm" type="button" data-act="dl" aria-label="Download snapshot"><i class="bi bi-download"></i></button></div>`).join('')
+        : '<p class="small mb-0" style="color:var(--muted)">No snapshots yet. The first one is taken automatically once you have tasks.</p>';
+      let info = '';
+      try {
+        const persisted = await navigator.storage?.persisted?.();
+        const est = await navigator.storage?.estimate?.();
+        info += persisted ? '<i class="bi bi-lock-fill status-ok"></i> Persistent storage granted — the browser won\'t clear it to save space.' : '<i class="bi bi-unlock status-warn"></i> Best-effort storage — keep regular backups.';
+        if (est?.usage != null) info += ` · Using ${(est.usage / 1024).toFixed(0)} KB`;
+      } catch {}
+      info += ` · ${S.tasks.length} tasks, ${S.trash.length} in trash, ${S.activity.length} activity entries`;
+      $('#storageInfo').innerHTML = info;
+    }
+    $('#backupBtn').addEventListener('click', () => { renderBackup(); backupModal.show(); });
+    $('#snapNow').addEventListener('click', () => { if (!S.tasks.length && !S.trash.length) return toast('Nothing to snapshot yet'); snapshot('Manual snapshot'); renderBackup(); toast('Snapshot saved'); });
+    $('#snapList').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const s = snaps().find((x) => x.id === b.closest('.snap').dataset.id); if (!s) return;
+      if (b.dataset.act === 'dl') return download(`opsflow-snapshot-${s.at.slice(0, 16).replace(/[:T]/g, '-')}.json`, JSON.stringify(s.data, null, 2), 'application/json');
+      if (!confirmTwice(b, 'Click to confirm')) return;
+      snapshot('Before restoring a snapshot');
+      const keep = S.lastBackupAt; S = normalize(s.data); S.lastBackupAt = keep;
+      log(null, `Restored snapshot from ${new Date(s.at).toLocaleString('en')}`, '#a855f7');
+      save(true); render(); renderBackup(); toast('Snapshot restored');
+    });
+
+    /* =========================================================
+       Activity panel
+       ========================================================= */
+    $('#activityPanel').addEventListener('show.bs.offcanvas', () => {
+      $('#actList').innerHTML = S.activity.length ? S.activity.slice(0, 150).map((a) => `<li style="--tc:${a.color || 'var(--indigo)'}">${a.task ? `<b>${esc(a.task)}</b> — ` : ''}${esc(a.text)}<time datetime="${esc(a.at)}">${esc(rel(a.at))}</time></li>`).join('') : '<p class="small" style="color:var(--muted)">Nothing yet.</p>';
+    });
+
+    /* =========================================================
+       GitHub sync (optional)
+       ========================================================= */
+    const gh = {
+      cfg: Object.assign({ token: '', user: '', repo: '', project: '', auto: true }, ls.get(GH_KEY, {})),
+      get on() { return !!(this.cfg.token && this.cfg.user && this.cfg.repo); },
+      headers() { return { Authorization: `Bearer ${this.cfg.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }; },
+      api(path) { return `https://api.github.com/repos/${encodeURIComponent(this.cfg.user)}/${encodeURIComponent(this.cfg.repo)}${path}`; },
+      payload(t) {
+        const body = [`**Assignee**: ${t.assignee || 'Unassigned'}`, `**Priority**: ${t.priority}`, `**Status**: ${t.status}`, `**Size**: ${t.size}`,
+          t.startDate && `**Start Date**: ${t.startDate}`, t.dueDate && `**Due Date**: ${t.dueDate}`, t.estimate && `**Estimate**: ${t.estimate} hours`,
+          t.milestone && `**Milestone**: ${t.milestone}`, t.desc && `\n${t.desc}`,
+          t.checklist.length && '\n' + t.checklist.map((c) => `- [${c.done ? 'x' : ' '}] ${c.text}`).join('\n'),
+          '\n<sub>Synced from OpsFlow</sub>'].filter(Boolean).join('\n');
+        return { title: `[${t.status}] ${t.title}`, body, labels: [...t.labels, t.priority.toLowerCase(), t.size.toLowerCase()], state: t.status === 'Done' ? 'closed' : 'open' };
+      },
+      async push(t) {
+        if (!this.on || !this.cfg.auto) return;
+        try {
+          const p = this.payload(t);
+          if (t.githubIssue) {
+            const r = await fetch(this.api(`/issues/${t.githubIssue}`), { method: 'PATCH', headers: this.headers(), body: JSON.stringify(p) });
+            if (!r.ok) throw new Error(r.status);
+          } else {
+            const { state, ...create } = p;
+            const r = await fetch(this.api('/issues'), { method: 'POST', headers: this.headers(), body: JSON.stringify(create) });
+            if (!r.ok) throw new Error(r.status);
+            const issue = await r.json();
+            t.githubIssue = issue.number; log(t, `Linked to GitHub issue #${issue.number}`, '#a5b4fc'); save(); render();
+            if (state === 'closed') fetch(this.api(`/issues/${issue.number}`), { method: 'PATCH', headers: this.headers(), body: JSON.stringify({ state }) });
+            if (this.cfg.project) this.addToProject(issue.node_id);
+          }
+        } catch (e) { console.warn('GitHub sync failed', e); toast(`GitHub sync failed (${e.message}). Your task is saved locally.`); }
+      },
+      async addToProject(nodeId) {
+        try {
+          const gql = (query, variables) => fetch('https://api.github.com/graphql', { method: 'POST', headers: this.headers(), body: JSON.stringify({ query, variables }) }).then((r) => r.json());
+          const q = await gql('query($l:String!,$n:Int!){user(login:$l){projectV2(number:$n){id}}}', { l: this.cfg.user, n: parseInt(this.cfg.project, 10) });
+          const pid = q.data?.user?.projectV2?.id; if (!pid) return;
+          await gql('mutation($p:ID!,$c:ID!){addProjectV2ItemById(input:{projectId:$p,contentId:$c}){item{id}}}', { p: pid, c: nodeId });
+        } catch (e) { console.warn('Project add failed', e); }
+      },
+      async pull() {
+        if (!this.on) { toast('Add your GitHub settings first'); return; }
+        const btn = $('#ghPull'); btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Pulling…';
+        try {
+          const r = await fetch(this.api('/issues?state=all&per_page=100'), { headers: this.headers() });
+          if (!r.ok) throw new Error(`GitHub answered ${r.status}`);
+          const issues = (await r.json()).filter((i) => !i.pull_request);
+          snapshot('Before pulling from GitHub');
+          let added = 0, updated = 0;
+          issues.forEach((i) => {
+            const m = i.title.match(/^\[(.*?)\]\s*/);
+            let status = m && STATUSES.find((s) => s.id.toLowerCase() === m[1].toLowerCase())?.id;
+            if (!status && m) status = /progress/i.test(m[1]) ? 'In Progress' : /review/i.test(m[1]) ? 'In Review' : /done|complet/i.test(m[1]) ? 'Done' : /ready/i.test(m[1]) ? 'Ready' : 'Backlog';
+            if (i.state === 'closed') status = 'Done';
+            const names = i.labels.map((l) => (typeof l === 'string' ? l : l.name));
+            const prio = names.find((n) => /^(high|medium|low)$/i.test(n));
+            const field = (k) => i.body?.match(new RegExp(`\\*\\*${k}\\*\\*:\\s*(.+)`))?.[1].trim() || '';
+            const data = {
+              title: i.title.replace(/^\[.*?\]\s*/, ''), status: status || 'Backlog',
+              priority: prio ? prio[0].toUpperCase() + prio.slice(1).toLowerCase() : 'Medium',
+              assignee: (field('Assignee') !== 'Unassigned' && field('Assignee')) || i.assignee?.login || '',
+              dueDate: field('Due Date'), startDate: field('Start Date'), milestone: field('Milestone') || i.milestone?.title || '',
+              estimate: parseFloat(field('Estimate')) || 0,
+              labels: names.filter((n) => !/^(high|medium|low|xs|s|m|l|xl)$/i.test(n) && !STATUSES.some((s) => s.id.toLowerCase().replace(' ', '-') === n.toLowerCase())),
+            };
+            const cur = S.tasks.find((t) => t.githubIssue === i.number);
+            if (cur) {
+              if (new Date(i.updated_at) > new Date(cur.updatedAt)) { const from = cur.status; Object.assign(cur, data, { updatedAt: i.updated_at }); log(cur, from !== cur.status ? `Updated from GitHub (${from} → ${cur.status})` : 'Updated from GitHub', '#a5b4fc'); updated++; }
+            } else {
+              const t = normTask({ ...data, id: uid(), githubIssue: i.number, createdAt: i.created_at, updatedAt: i.updated_at, completedAt: i.closed_at, order: Date.now() + added });
+              log(t, `Imported from GitHub issue #${i.number}`, '#a5b4fc'); S.tasks.push(t); added++;
+            }
+          });
+          log(null, `Pulled from GitHub: ${added} new, ${updated} updated`, '#a5b4fc');
+          save(); render(); ghModal.hide(); toast(`GitHub: ${added} new, ${updated} updated`);
+        } catch (e) { toast(`Could not pull from GitHub: ${e.message}`); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-cloud-download"></i> Pull from GitHub'; }
+      },
+    };
+    $('#ghBtn').addEventListener('click', () => {
+      $('#ghToken').value = gh.cfg.token; $('#ghUser').value = gh.cfg.user; $('#ghRepo').value = gh.cfg.repo; $('#ghProject').value = gh.cfg.project; $('#ghAuto').checked = gh.cfg.auto;
+      ghModal.show();
+    });
+    $('#ghForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      Object.assign(gh.cfg, { token: $('#ghToken').value.trim(), user: $('#ghUser').value.trim(), repo: $('#ghRepo').value.trim(), project: $('#ghProject').value.trim(), auto: $('#ghAuto').checked });
+      ls.set(GH_KEY, gh.cfg); ghModal.hide(); toast(gh.on ? 'GitHub sync is on' : 'GitHub settings saved');
+    });
+    $('#ghPull').addEventListener('click', () => gh.pull());
+    $('#ghForget').addEventListener('click', () => { gh.cfg.token = ''; $('#ghToken').value = ''; ls.set(GH_KEY, gh.cfg); toast('Token removed from this browser'); });
+
+    /* =========================================================
+       Sample board
+       ========================================================= */
+    $('#sampleBtn').addEventListener('click', () => {
+      const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+      const mk = (title, status, priority, assignee, extra = {}) => normTask({ id: uid(), title, status, priority, assignee, createdAt: now(), updatedAt: now(), order: Date.now() + Math.random() * 1000, ...extra });
+      const list = [
+        mk('Map IVR flows for billing line', 'Backlog', 'Medium', 'Andrea López', { size: 'L', estimate: 8, labels: ['ivr', 'discovery'], milestone: 'Sprint 5' }),
+        mk('Collect top 50 intents from transcripts', 'Backlog', 'Low', 'Carlos Méndez', { estimate: 6, labels: ['nlp'] }),
+        mk('Dialogflow CX: payment-status flow', 'Ready', 'High', 'Andrea López', { size: 'L', estimate: 12, dueDate: d(4), labels: ['dialogflow', 'payments'], milestone: 'Sprint 4', checklist: [{ text: 'Define pages', done: true }, { text: 'Webhook to billing API', done: false }, { text: 'Test with 20 utterances', done: false }] }),
+        mk('Agent Assist knowledge base import', 'In Progress', 'High', 'Sofía Ramírez', { estimate: 10, dueDate: d(-1), labels: ['agent-assist', 'kb'], milestone: 'Sprint 4', desc: 'Load FAQ docs and policies into Agent Assist.', checklist: [{ text: 'Export FAQs', done: true }, { text: 'Clean duplicates', done: true }, { text: 'Upload & index', done: false }] }),
+        mk('Fix transfer to queue on after-hours', 'In Progress', 'Medium', 'Carlos Méndez', { size: 'S', estimate: 3, dueDate: d(1), labels: ['bug', 'routing'] }),
+        mk('Insights dashboard: CSAT by intent', 'In Review', 'Medium', 'Diego Pérez', { estimate: 5, labels: ['insights', 'looker'], milestone: 'Sprint 4' }),
+        mk('Spanish voice for virtual agent', 'Done', 'Low', 'Sofía Ramírez', { size: 'S', estimate: 2, labels: ['tts'], completedAt: now() }),
+        mk('Escalation rules for VIP customers', 'Done', 'High', 'Diego Pérez', { estimate: 4, labels: ['routing'], completedAt: now() }),
+      ];
+      list.forEach((t) => log(t, `Created in ${t.status}`, '#22c55e'));
+      S.tasks.push(...list); log(null, 'Loaded the sample board', '#a855f7'); save(true); render(); toast('Sample board loaded');
+    });
+    $('#newBtn').addEventListener('click', () => openTask(null));
+    $('#welcomeNew').addEventListener('click', () => openTask(null));
+
+    /* ---------- Keyboard ---------- */
+    document.addEventListener('keydown', (e) => {
+      if (e.target.closest('input, textarea, select, [contenteditable]') || document.querySelector('.modal.show, .offcanvas.show')) return;
+      if (e.key === '/') { e.preventDefault(); $('#search').focus(); }
+      else if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); openTask(null); }
+    });
+
+    /* ---------- Keep tabs in sync ---------- */
+    window.addEventListener('storage', (e) => { if (e.key === KEY && e.newValue) { try { S = normalize(JSON.parse(e.newValue)); render(); } catch {} } });
+    window.addEventListener('beforeunload', () => { if (saveTimer) { S.savedAt = now(); ls.set(KEY, S); } });
+
+    /* ---------- Boot ---------- */
+    load().then(() => { dailySnapshot(); render(); });
+  })();
+  </script>
+</body>
+</html>
