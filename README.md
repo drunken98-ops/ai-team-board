@@ -12,7 +12,7 @@
 |---|---|
 | 화면 | `index.html` 한 파일 (Bootstrap CDN, 빌드·설치 불필요) |
 | 배포 | GitHub Pages — `main` 브랜치 root |
-| 공유 상태 | GitHub Issues (제목 `[상태] 업무 내용`) |
+| 공유 상태 | GitHub Issues (제목 `[상태] 업무 내용`) — 페이지를 열면 토큰 없이 자동 로드(보기 전용) |
 | 개인 작업 상태 | 접속한 브라우저의 localStorage + IndexedDB (자동 저장) |
 
 ## 대리별 역할
@@ -34,7 +34,16 @@
 3. 카드를 끌어 **Backlog → Ready → In Progress → In Review → Done** 으로 옮긴다.
 4. `Esc` 로 닫기, `/` 로 검색.
 
-## GitHub Issues 동기화 켜는 법
+## 그냥 열기만 하면 됩니다 (토큰 불필요)
+
+이 저장소는 Public이라 GitHub Issues를 **토큰 없이 읽을 수 있습니다**. 그래서 보드 페이지를 열면
+`drunken98-ops/ai-team-board`의 Issues를 자동으로 불러와 칸반(Backlog / Ready / In Progress / In Review / Done)에 채웁니다.
+- 상단에 `현재 보기 전용(자동 동기화)` 안내가 뜨고, `새로고침` 버튼으로 즉시 다시 불러올 수 있습니다(자동 갱신 5분).
+- 카드마다 **담당·내용 요약·`#번호`(이슈·댓글 링크)** 가 보입니다.
+- 보기 전용에서는 카드를 옮겨도 **이 브라우저에만** 저장되고 GitHub에는 올라가지 않습니다.
+- 코드에는 어떤 토큰·비밀키도 넣지 않았습니다.
+
+## GitHub Issues 동기화 켜는 법 (직접 수정까지 하려면)
 
 보드의 업무를 저장소 Issues와 양방향으로 맞추려면 한 번만 설정하면 됩니다.
 
