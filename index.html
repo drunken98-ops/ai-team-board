@@ -1006,15 +1006,21 @@
     }
 
     /* Merge issues into the board: new ones are added, changed ones updated when GitHub is newer. */
-    function mergeIssues(issues, owner, repo) {
+    function mergeIssues(issues, owner, repo, { refreshContent = false } = {}) {
       let added = 0, updated = 0;
       issues.filter((i) => !i.pull_request).forEach((i) => {
         const data = issueToData(i, owner, repo);
         const cur = S.tasks.find((t) => t.githubIssue === i.number);
         if (cur) {
-          if (new Date(i.updated_at || 0) <= new Date(cur.updatedAt || 0)) return;
+          const newer = new Date(i.updated_at || 0) > new Date(cur.updatedAt || 0);
+          if (!newer && !refreshContent) return;
+          // Read-only view: keep the local column/담당 moves, but always refresh what the issue says.
+          const patch = newer
+            ? { ...data, updatedAt: i.updated_at, completedAt: i.closed_at || cur.completedAt }
+            : { desc: data.desc, labels: data.labels, githubUrl: data.githubUrl, githubComments: data.githubComments };
+          if (!Object.keys(patch).some((k) => JSON.stringify(cur[k]) !== JSON.stringify(patch[k]))) return;
           const from = cur.status;
-          Object.assign(cur, data, { updatedAt: i.updated_at, completedAt: i.closed_at || cur.completedAt });
+          Object.assign(cur, patch);
           log(cur, from !== cur.status ? `Updated from GitHub (${from} → ${cur.status})` : 'Updated from GitHub', '#a5b4fc');
           updated++;
         } else {
@@ -1090,7 +1096,7 @@
       lastError: null,
       get active() { return !gh.on; },
       apply(issues) {
-        const res = mergeIssues(issues, PUBLIC_REPO.owner, PUBLIC_REPO.repo);
+        const res = mergeIssues(issues, PUBLIC_REPO.owner, PUBLIC_REPO.repo, { refreshContent: true });
         if (res.added || res.updated) { save(); render(); }
         return res;
       },
