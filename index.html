@@ -126,6 +126,18 @@
     .avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: .62rem; font-weight: 800; color: #fff; margin-left: auto; flex: none; }
     .cl-bar { height: 4px; border-radius: 999px; background: var(--surface-2); margin-top: .55rem; overflow: hidden; }
     .cl-bar span { display: block; height: 100%; background: var(--grad); }
+    .task-desc { margin: 0 0 .5rem; font-size: .79rem; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+    .task-meta .who { display: inline-flex; align-items: center; gap: .35rem; min-width: 0; }
+    .task-meta .who .avatar { margin-left: 0; }
+    a.tag { text-decoration: none; }
+    a.tag:hover { color: var(--text); background: var(--surface-2); border-color: var(--line-2); }
+    a.gh-link { color: var(--muted); }
+    a.gh-link:hover { color: var(--text); }
+    .sync-banner { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; margin: .9rem 0 0; padding: .6rem .85rem; border-radius: 12px; background: color-mix(in srgb, var(--indigo) 13%, var(--surface)); border: 1px solid color-mix(in srgb, var(--indigo) 38%, var(--line)); font-size: .84rem; color: var(--text); }
+    .sync-banner > i { color: #818cf8; font-size: 1rem; }
+    .sync-banner .muted { color: var(--muted); }
+    .sync-banner .grow { flex: 1; min-width: 220px; }
+    .sync-banner .btn-soft.sm { margin-left: auto; }
 
     /* ---------- Bienvenida ---------- */
     .welcome { width: 100%; max-width: 720px; margin: 2.5rem auto 3rem; text-align: center; padding: 2.4rem 1.6rem; border-radius: 28px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(14px); }
@@ -225,11 +237,16 @@
   </header>
 
   <main class="container-xxl">
+    <div class="sync-banner" id="syncBanner" role="status" hidden>
+      <i class="bi bi-cloud-check-fill"></i>
+      <span class="grow" id="syncBannerText">현재 <b>보기 전용(자동 동기화)</b> · 직접 수정·추가는 오른쪽 위 <i class="bi bi-github"></i> GitHub 아이콘에서 토큰을 설정하면 가능합니다.</span>
+      <button class="btn-soft sm" type="button" id="syncNow"><i class="bi bi-arrow-repeat"></i> 새로고침</button>
+    </div>
     <div class="backup-nag" id="backupNag" role="status"><i class="bi bi-shield-exclamation fs-5" style="color:#a5b4fc"></i><span class="flex-grow-1" id="nagText">You haven't downloaded a backup yet.</span><button class="btn-soft sm" type="button" id="nagBackup"><i class="bi bi-download"></i> Download backup</button><button class="btn-soft sm" type="button" id="nagHide" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button></div>
 
     <section class="panel-x" id="teamGuide" style="margin:0 0 1rem">
       <h3><i class="bi bi-people-fill" style="color:#818cf8"></i>우리 AI 팀 합동 보드</h3>
-      <p class="mb-2">몽이와 대리들이 같은 보드에서 업무를 나눠 처리합니다. 여기서 바꾼 내용은 이 브라우저에 자동 저장되고, GitHub 저장소 <a href="https://github.com/drunken98-ops/ai-team-board" target="_blank" rel="noopener">ai-team-board</a>의 Issues와 동기화할 수 있습니다.</p>
+      <p class="mb-2">몽이와 대리들이 같은 보드에서 업무를 나눠 처리합니다. 페이지를 열면 GitHub 저장소 <a href="https://github.com/drunken98-ops/ai-team-board" target="_blank" rel="noopener">ai-team-board</a>의 Issues가 <b>토큰 없이 자동으로</b> 보드에 표시됩니다. 카드의 <i class="bi bi-github"></i> <code>#번호</code>를 누르면 그 업무의 이슈·댓글로 이동합니다.</p>
       <details>
         <summary class="small" style="cursor:pointer">대리별 역할 · GitHub 동기화 설정 방법 보기</summary>
         <div class="small mt-2" style="color:var(--muted)">
@@ -242,7 +259,7 @@
             <li><b>큐대리</b> — 전국 단위 경품·이벤트 탐색</li>
             <li><b>팔대리</b> — 메신저·메일 비서</li>
           </ul>
-          <p class="mb-1"><b>GitHub 동기화 켜기:</b> 위쪽 GitHub 아이콘(<i class="bi bi-github"></i>) → Personal access token에 Fine-grained 토큰(이 저장소만, Issues: read &amp; write) 입력 → Owner <code>drunken98-ops</code>, Repository <code>ai-team-board</code> 입력 → 저장. «Pull from GitHub»를 누르면 저장소 Issues가 보드로 들어옵니다.</p>
+          <p class="mb-1"><b>GitHub 동기화(수정까지 하려면):</b> 위쪽 GitHub 아이콘(<i class="bi bi-github"></i>) → Personal access token에 Fine-grained 토큰(이 저장소만, Issues: read &amp; write) 입력 → Owner <code>drunken98-ops</code>, Repository <code>ai-team-board</code> 입력 → 저장. «Pull from GitHub»를 누르면 저장소 Issues가 보드로 들어옵니다.</p>
           <p class="mb-0">Issue 제목은 <code>[상태] 제목</code> 형식으로 오가고, 상태는 Backlog · Ready · In Progress · In Review · Done 다섯 가지입니다.</p>
         </div>
       </details>
@@ -376,7 +393,7 @@
       <form class="modal-content" id="ghForm">
         <div class="modal-header"><h2 class="modal-title fs-5" id="ghTitle"><i class="bi bi-github me-2"></i>GitHub Issues 동기화</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
         <div class="modal-body">
-          <p class="small" style="color:var(--muted)">선택 사항입니다. 새로 만들거나 수정한 업무가 저장소의 Issue로 함께 기록됩니다. «Pull from GitHub»를 누르면 저장소의 Issue가 보드로 합쳐지며, 이 브라우저의 업무가 지워지지 않습니다.</p>
+          <p class="small" style="color:var(--muted)">지금은 <b>토큰 없이 보기 전용</b>으로 저장소 Issues를 자동으로 불러옵니다. 토큰을 저장하면 새로 만들거나 수정한 업무가 저장소의 Issue로 함께 기록되고, «Pull from GitHub»로 다시 합칠 수 있습니다(이 브라우저의 업무는 지워지지 않습니다).</p>
           <div class="row g-3">
             <div class="col-12"><label class="form-label" for="ghToken">Personal access token (Fine-grained)</label><input type="password" class="form-control" id="ghToken" placeholder="github_pat_… or ghp_…" autocomplete="off"></div>
             <div class="col-6"><label class="form-label" for="ghUser">Owner (계정)</label><input class="form-control" id="ghUser" placeholder="your-user"></div>
@@ -410,6 +427,8 @@
        Constants
        ========================================================= */
     const KEY = 'opsflow:data', SNAP_KEY = 'opsflow:snapshots', PREF_KEY = 'opsflow:prefs', GH_KEY = 'opsflow:github';
+    const PUBLIC_REPO = { owner: 'drunken98-ops', repo: 'ai-team-board' }, PUBLIC_KEY = 'opsflow:public-cache';
+    const PUBLIC_TTL = 90 * 1000;
     const MAX_SNAPS = 10, MAX_ACTIVITY = 300, MAX_HISTORY = 80;
     const STATUSES = [
       { id: 'Backlog', icon: 'bi-inbox', color: 'var(--c-backlog)' },
@@ -474,6 +493,7 @@
       checklist: Array.isArray(t.checklist) ? t.checklist.map((c) => ({ id: String(c.id ?? uid()), text: String(c.text ?? ''), done: !!c.done })) : [],
       createdAt: t.createdAt || now(), updatedAt: t.updatedAt || now(), completedAt: t.completedAt || null,
       order: Number.isFinite(t.order) ? t.order : Date.now(), githubIssue: t.githubIssue || null,
+      githubUrl: String(t.githubUrl ?? ''), githubComments: Number(t.githubComments) || 0,
       history: Array.isArray(t.history) ? t.history.slice(-MAX_HISTORY) : [], deletedAt: t.deletedAt || null,
     });
     const normalize = (d) => {
@@ -589,23 +609,31 @@
       new: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     };
 
+    const issueHref = (t) => t.githubUrl || (t.githubIssue && (gh.cfg.user || PUBLIC_REPO.owner) ? `https://github.com/${encodeURIComponent(gh.cfg.user || PUBLIC_REPO.owner)}/${encodeURIComponent(gh.cfg.repo || PUBLIC_REPO.repo)}/issues/${t.githubIssue}` : '');
+    const descPreview = (s) => String(s).replace(/[*_`>#]/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 160);
+
     function cardHTML(t) {
       const done = t.checklist.filter((c) => c.done).length, total = t.checklist.length;
       const due = t.dueDate ? `<span class="due ${isOverdue(t) ? 'over' : isSoon(t) ? 'soon' : ''}"><i class="bi bi-calendar-event"></i> ${esc(fmtDay(t.dueDate))}</span>` : '';
+      const href = t.githubIssue ? issueHref(t) : '';
+      const ghTag = href
+        ? `<a class="tag gh-link ms-auto" href="${esc(href)}" target="_blank" rel="noopener" title="GitHub 이슈·댓글 열기"><i class="bi bi-github"></i> #${esc(t.githubIssue)}${t.githubComments ? ` <i class="bi bi-chat-dots"></i> ${esc(t.githubComments)}` : ''}</a>`
+        : '';
+      const desc = t.desc ? descPreview(t.desc) : '';
       return `
         <div class="task-top">
           <span class="tag prio">${esc(t.priority)}</span><span class="tag">${esc(t.size)}</span>
           ${t.estimate ? `<span class="tag"><i class="bi bi-hourglass"></i>${esc(t.estimate)}h</span>` : ''}
-          ${t.githubIssue ? `<span class="tag ms-auto" title="GitHub issue"><i class="bi bi-github"></i>#${esc(t.githubIssue)}</span>` : ''}
+          ${ghTag}
         </div>
         <h3 class="task-title">${esc(t.title)}</h3>
+        ${desc ? `<p class="task-desc">${esc(desc)}${t.desc.length > 160 ? '…' : ''}</p>` : ''}
         ${t.labels.length ? `<div class="labels">${t.labels.slice(0, 3).map((l) => `<span class="label">${esc(l)}</span>`).join('')}${t.labels.length > 3 ? `<span class="label">+${t.labels.length - 3}</span>` : ''}</div>` : ''}
         <div class="task-meta">
           ${due}
           ${total ? `<span><i class="bi bi-check2-square"></i> ${done}/${total}</span>` : ''}
-          ${t.desc ? '<span title="Has description"><i class="bi bi-text-left"></i></span>' : ''}
           ${t.milestone ? `<span><i class="bi bi-flag"></i> ${esc(t.milestone)}</span>` : ''}
-          ${t.assignee ? `<span class="avatar" style="background:${avColor(t.assignee)}" title="${esc(t.assignee)}">${esc(initials(t.assignee))}</span>` : ''}
+          ${t.assignee ? `<span class="who ms-auto" title="담당: ${esc(t.assignee)}"><span class="avatar" style="background:${avColor(t.assignee)}">${esc(initials(t.assignee))}</span>${esc(t.assignee)}</span>` : ''}
         </div>
         ${total ? `<div class="cl-bar"><span style="width:${Math.round(done / total * 100)}%"></span></div>` : ''}`;
     }
@@ -671,7 +699,7 @@
     }
 
     /* ---------- Board events ---------- */
-    $('#board').addEventListener('click', (e) => { const c = e.target.closest('.task'); if (c) openTask(S.tasks.find((t) => t.id === c.dataset.id)); });
+    $('#board').addEventListener('click', (e) => { if (e.target.closest('a')) return; const c = e.target.closest('.task'); if (c) openTask(S.tasks.find((t) => t.id === c.dataset.id)); });
     $('#board').addEventListener('keydown', (e) => { const c = e.target.closest('.task'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openTask(S.tasks.find((t) => t.id === c.dataset.id)); } });
     let dragId = null;
     $('#board').addEventListener('dragstart', (e) => { const c = e.target.closest('.task'); if (!c) return; dragId = c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); });
@@ -728,7 +756,7 @@
       $('#fLabels').value = draft.labels.join(', '); $('#fDesc').value = draft.desc;
       $('#editOnly').style.visibility = task ? 'visible' : 'hidden';
       $('#saveLabel').textContent = task ? 'Save changes' : 'Create task';
-      $('#taskMetaLine').textContent = task ? `Created ${rel(task.createdAt)} · updated ${rel(task.updatedAt)}${task.githubIssue ? ` · GitHub #${task.githubIssue}` : ''}` : 'New task';
+      $('#taskMetaLine').innerHTML = task ? esc(`Created ${rel(task.createdAt)} · updated ${rel(task.updatedAt)}${task.githubIssue ? ` · GitHub #${task.githubIssue}` : ''}`) + (ghPublic.active ? ' · <span style="color:var(--amber)">보기 전용 — 변경은 이 브라우저에만 저장됩니다</span>' : '') : 'New task';
       $$('.nav-pills-x button')[2].hidden = !task;
       renderChecklist(); renderHistory(); showTab('details');
       taskModal.show();
@@ -947,6 +975,57 @@
     /* =========================================================
        GitHub sync (optional)
        ========================================================= */
+    /* One GitHub issue → one board task. Shared by the token pull and the public read-only sync. */
+    function issueToData(i, owner, repo) {
+      const m = i.title.match(/^\[(.*?)\]\s*/);
+      let status = m && STATUSES.find((s) => s.id.toLowerCase() === m[1].toLowerCase())?.id;
+      if (!status && m) status = /progress/i.test(m[1]) ? 'In Progress' : /review/i.test(m[1]) ? 'In Review' : /done|complet/i.test(m[1]) ? 'Done' : /ready/i.test(m[1]) ? 'Ready' : 'Backlog';
+      if (i.state === 'closed') status = 'Done';
+      const names = (i.labels || []).map((l) => (typeof l === 'string' ? l : l.name));
+      const prio = names.find((n) => /^(high|medium|low)$/i.test(n));
+      const field = (k) => (i.body?.match(new RegExp(`\\*\\*${k}\\*\\*:\\s*(.+)`))?.[1] || '').trim();
+      const prioField = field('Priority');
+      const desc = String(i.body || '')
+        .replace(/^\s*\*\*(Assignee|Priority|Status|Size|Start Date|Due Date|Estimate|Milestone|Schedule)\*\*:.*$/gm, '')
+        .replace(/<sub>Synced from OpsFlow<\/sub>/gi, '')
+        .replace(/\n{3,}/g, '\n\n').trim();
+      return {
+        title: i.title.replace(/^\[.*?\]\s*/, '').trim() || i.title,
+        status: status || 'Backlog',
+        priority: prio ? prio[0].toUpperCase() + prio.slice(1).toLowerCase() : (PRIO[prioField] ? prioField : 'Medium'),
+        assignee: (field('Assignee') !== 'Unassigned' && field('Assignee')) || i.assignee?.login || i.title.match(/담당\s*[:：]\s*([^\s·,()]+)/)?.[1] || '',
+        dueDate: /^\d{4}-\d{2}-\d{2}$/.test(field('Due Date')) ? field('Due Date') : '',
+        startDate: /^\d{4}-\d{2}-\d{2}$/.test(field('Start Date')) ? field('Start Date') : '',
+        milestone: field('Milestone') || i.milestone?.title || '',
+        estimate: parseFloat(field('Estimate')) || 0,
+        desc,
+        labels: names.filter((n) => !/^(high|medium|low|xs|s|m|l|xl)$/i.test(n) && !STATUSES.some((s) => s.id.toLowerCase().replace(' ', '-') === n.toLowerCase())),
+        githubUrl: `https://github.com/${owner}/${repo}/issues/${i.number}`,
+        githubComments: Number(i.comments) || 0,
+      };
+    }
+
+    /* Merge issues into the board: new ones are added, changed ones updated when GitHub is newer. */
+    function mergeIssues(issues, owner, repo) {
+      let added = 0, updated = 0;
+      issues.filter((i) => !i.pull_request).forEach((i) => {
+        const data = issueToData(i, owner, repo);
+        const cur = S.tasks.find((t) => t.githubIssue === i.number);
+        if (cur) {
+          if (new Date(i.updated_at || 0) <= new Date(cur.updatedAt || 0)) return;
+          const from = cur.status;
+          Object.assign(cur, data, { updatedAt: i.updated_at, completedAt: i.closed_at || cur.completedAt });
+          log(cur, from !== cur.status ? `Updated from GitHub (${from} → ${cur.status})` : 'Updated from GitHub', '#a5b4fc');
+          updated++;
+        } else {
+          const t = normTask({ ...data, id: uid(), githubIssue: i.number, createdAt: i.created_at || now(), updatedAt: i.updated_at || now(), completedAt: i.closed_at || null, order: new Date(i.created_at || 0).getTime() || Date.now() + added });
+          log(t, `Imported from GitHub issue #${i.number}`, '#a5b4fc');
+          S.tasks.push(t); added++;
+        }
+      });
+      return { added, updated };
+    }
+
     const gh = {
       cfg: Object.assign({ token: '', user: '', repo: '', project: '', auto: true }, ls.get(GH_KEY, {})),
       get on() { return !!(this.cfg.token && this.cfg.user && this.cfg.repo); },
@@ -987,44 +1066,71 @@
         } catch (e) { console.warn('Project add failed', e); }
       },
       async pull() {
-        if (!this.on) { toast('Add your GitHub settings first'); return; }
+        if (!this.on) { ghModal.hide(); ghPublic.sync({ force: true, quiet: false }); return; }
         const btn = $('#ghPull'); btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Pulling…';
         try {
           const r = await fetch(this.api('/issues?state=all&per_page=100'), { headers: this.headers() });
           if (!r.ok) throw new Error(`GitHub answered ${r.status}`);
-          const issues = (await r.json()).filter((i) => !i.pull_request);
+          const issues = await r.json();
           snapshot('Before pulling from GitHub');
-          let added = 0, updated = 0;
-          issues.forEach((i) => {
-            const m = i.title.match(/^\[(.*?)\]\s*/);
-            let status = m && STATUSES.find((s) => s.id.toLowerCase() === m[1].toLowerCase())?.id;
-            if (!status && m) status = /progress/i.test(m[1]) ? 'In Progress' : /review/i.test(m[1]) ? 'In Review' : /done|complet/i.test(m[1]) ? 'Done' : /ready/i.test(m[1]) ? 'Ready' : 'Backlog';
-            if (i.state === 'closed') status = 'Done';
-            const names = i.labels.map((l) => (typeof l === 'string' ? l : l.name));
-            const prio = names.find((n) => /^(high|medium|low)$/i.test(n));
-            const field = (k) => i.body?.match(new RegExp(`\\*\\*${k}\\*\\*:\\s*(.+)`))?.[1].trim() || '';
-            const data = {
-              title: i.title.replace(/^\[.*?\]\s*/, ''), status: status || 'Backlog',
-              priority: prio ? prio[0].toUpperCase() + prio.slice(1).toLowerCase() : 'Medium',
-              assignee: (field('Assignee') !== 'Unassigned' && field('Assignee')) || i.assignee?.login || '',
-              dueDate: field('Due Date'), startDate: field('Start Date'), milestone: field('Milestone') || i.milestone?.title || '',
-              estimate: parseFloat(field('Estimate')) || 0,
-              labels: names.filter((n) => !/^(high|medium|low|xs|s|m|l|xl)$/i.test(n) && !STATUSES.some((s) => s.id.toLowerCase().replace(' ', '-') === n.toLowerCase())),
-            };
-            const cur = S.tasks.find((t) => t.githubIssue === i.number);
-            if (cur) {
-              if (new Date(i.updated_at) > new Date(cur.updatedAt)) { const from = cur.status; Object.assign(cur, data, { updatedAt: i.updated_at }); log(cur, from !== cur.status ? `Updated from GitHub (${from} → ${cur.status})` : 'Updated from GitHub', '#a5b4fc'); updated++; }
-            } else {
-              const t = normTask({ ...data, id: uid(), githubIssue: i.number, createdAt: i.created_at, updatedAt: i.updated_at, completedAt: i.closed_at, order: Date.now() + added });
-              log(t, `Imported from GitHub issue #${i.number}`, '#a5b4fc'); S.tasks.push(t); added++;
-            }
-          });
+          const { added, updated } = mergeIssues(issues, this.cfg.user, this.cfg.repo);
           log(null, `Pulled from GitHub: ${added} new, ${updated} updated`, '#a5b4fc');
           save(); render(); ghModal.hide(); toast(`GitHub: ${added} new, ${updated} updated`);
         } catch (e) { toast(`Could not pull from GitHub: ${e.message}`); }
         finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-cloud-download"></i> Pull from GitHub'; }
       },
     };
+
+    /* ---------- Public (token-free) read-only sync ----------
+       The board repository is public, so its issues can be read with an
+       unauthenticated GET. No token or secret is stored in this file. */
+    const ghPublic = {
+      cache: ls.get(PUBLIC_KEY, { at: 0, issues: [] }),
+      busy: false,
+      lastError: null,
+      get active() { return !gh.on; },
+      apply(issues) {
+        const res = mergeIssues(issues, PUBLIC_REPO.owner, PUBLIC_REPO.repo);
+        if (res.added || res.updated) { save(); render(); }
+        return res;
+      },
+      async sync({ force = false, quiet = true } = {}) {
+        if (!this.active || this.busy) { renderSyncBanner(); return null; }
+        if (!S.tasks.length && this.cache?.issues?.length) { this.apply(this.cache.issues); renderSyncBanner(); }
+        if (!force && Date.now() - (this.cache?.at || 0) < PUBLIC_TTL) { renderSyncBanner(); return null; }
+        this.busy = true; renderSyncBanner();
+        try {
+          const url = `https://api.github.com/repos/${PUBLIC_REPO.owner}/${PUBLIC_REPO.repo}/issues?state=all&per_page=100&sort=created&direction=asc`;
+          const r = await fetch(url, { headers: { Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+          if (!r.ok) throw new Error(r.status === 403 || r.status === 429 ? 'GitHub 호출 한도 초과 — 잠시 후 새로고침' : `GitHub ${r.status}`);
+          const issues = (await r.json()).filter((i) => !i.pull_request);
+          this.cache = { at: Date.now(), issues };
+          ls.set(PUBLIC_KEY, this.cache);
+          const res = this.apply(issues);
+          this.lastError = null;
+          if (!quiet && res) toast(res.added || res.updated ? `GitHub에서 ${res.added}건 추가 · ${res.updated}건 갱신` : '이미 최신 상태입니다');
+        } catch (e) {
+          this.lastError = e.message;
+          if (!quiet) toast(`자동 동기화: ${e.message}`);
+        } finally { this.busy = false; renderSyncBanner(); }
+      },
+    };
+
+    function renderSyncBanner() {
+      const el = $('#syncBanner'); if (!el) return;
+      el.hidden = !ghPublic.active;
+      if (!ghPublic.active) return;
+      const txt = $('#syncBannerText'), btn = $('#syncNow');
+      btn.disabled = ghPublic.busy;
+      if (ghPublic.busy) {
+        txt.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> GitHub에서 최신 업무를 불러오는 중…';
+        return;
+      }
+      const when = ghPublic.cache?.at ? new Date(ghPublic.cache.at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : null;
+      txt.innerHTML = `현재 <b>보기 전용(자동 동기화)</b> · 직접 수정·추가는 오른쪽 위 <i class="bi bi-github"></i> GitHub 아이콘에서 토큰을 설정하면 가능합니다.`
+        + (when ? ` <span class="muted">· 마지막 동기화 ${esc(when)}</span>` : '')
+        + (ghPublic.lastError ? ` <span style="color:var(--amber)">· ${esc(ghPublic.lastError)}</span>` : '');
+    }
     $('#ghBtn').addEventListener('click', () => {
       $('#ghToken').value = gh.cfg.token; $('#ghUser').value = gh.cfg.user; $('#ghRepo').value = gh.cfg.repo; $('#ghProject').value = gh.cfg.project; $('#ghAuto').checked = gh.cfg.auto;
       ghModal.show();
@@ -1034,8 +1140,9 @@
       Object.assign(gh.cfg, { token: $('#ghToken').value.trim(), user: $('#ghUser').value.trim(), repo: $('#ghRepo').value.trim(), project: $('#ghProject').value.trim(), auto: $('#ghAuto').checked });
       ls.set(GH_KEY, gh.cfg); ghModal.hide(); toast(gh.on ? 'GitHub sync is on' : 'GitHub settings saved');
     });
-    $('#ghPull').addEventListener('click', () => gh.pull());
-    $('#ghForget').addEventListener('click', () => { gh.cfg.token = ''; $('#ghToken').value = ''; ls.set(GH_KEY, gh.cfg); toast('Token removed from this browser'); });
+    $('#ghPull').addEventListener('click', () => { if (!gh.on) ghPublic.sync({ force: true, quiet: false }); else gh.pull(); });
+    $('#syncNow').addEventListener('click', () => ghPublic.sync({ force: true, quiet: false }));
+    $('#ghForget').addEventListener('click', () => { gh.cfg.token = ''; $('#ghToken').value = ''; ls.set(GH_KEY, gh.cfg); toast('Token removed from this browser'); ghPublic.sync({ force: true }); });
 
     /* =========================================================
        Sample board
@@ -1071,7 +1178,15 @@
     window.addEventListener('beforeunload', () => { if (saveTimer) { S.savedAt = now(); ls.set(KEY, S); } });
 
     /* ---------- Boot ---------- */
-    load().then(() => { dailySnapshot(); render(); });
+    load().then(async () => {
+      dailySnapshot();
+      render();
+      renderSyncBanner();
+      await ghPublic.sync();
+      // Keep the read-only board fresh while the tab stays open (well under GitHub's anonymous rate limit).
+      setInterval(() => { if (!document.hidden) ghPublic.sync(); }, 5 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) ghPublic.sync(); });
+    });
   })();
   </script>
 </body>
