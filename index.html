@@ -986,7 +986,7 @@
       const field = (k) => (i.body?.match(new RegExp(`\\*\\*${k}\\*\\*:\\s*(.+)`))?.[1] || '').trim();
       const prioField = field('Priority');
       const desc = String(i.body || '')
-        .replace(/^\s*\*\*(Assignee|Priority|Status|Size|Start Date|Due Date|Estimate|Milestone|Schedule)\*\*:.*$/gm, '')
+        .replace(/^\s*\*\*(Assignee|Priority|Status|Size|Start Date|Due Date|Estimate|Milestone|Schedule|Progress|Flow|Note)\*\*:.*$/gm, '')
         .replace(/<sub>Synced from OpsFlow<\/sub>/gi, '')
         .replace(/\n{3,}/g, '\n\n').trim();
       return {
